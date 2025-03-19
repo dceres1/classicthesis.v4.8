@@ -2,17 +2,27 @@
 \chapter{Simulation}\label{ch:simulation}
 %*****************************************
 \section{The Robot}\label{sec:nuga}
-Nuga is a platform equipped with two drilling mechanisms,  
+Nuga is Paltech's solution for speeding up the weed removal process. Nuga is a mobile platform equipped with two drilling mechanisms, also called \ac{IT}, one main camera at the front for plant detection, two internal cameras for fine adjustment during tools' placement, an IMU, and two GNSS antennas for GPS localization. Each \ac{IT} is mounted on a structure with three \ac{DOF} using prismatic joints, allowing movement in X, Y, and Z directions.
+
+\begin{figure}[bth]
+    \centering
+    \includegraphics[width=0.7\linewidth]{gfx/ch02/nuga_cad.png}
+    \caption{Nuga Platform}
+    \label{fig:nuga-cad}
+\end{figure}
+
 
 % See classicthesis-config.tex for changing the prefixes of the refs
-Testing for autoref: \autoref{ch:intro}, \autoref{ch:examples}, and \autoref{sec:new}
+% Testing for autoref: \autoref{ch:intro}, \autoref{ch:examples}, and \autoref{sec:new}
 
 %Testing for ``clever'' references: \cref{ch:intro} and \cref{ch:examples}
 % Ugly work-around
 % Part~\textsc{\ref{pt:showcase}}
 
 
-\section{A New Section}\label{sec:new}
+\section{Simulation}\label{sec:simulation}
+A representative simulation of reality is crucial for developing new algorithms and analyzing robot behavior before implementing them in the physical world. Therefore, building a simulation of the project was a foundational step for this work, ensuring a controlled environment for validation and testing. Gazebo\footnote{Gazebo is a physics-based robotics simulation tool that allows testing and validation of robot models before real-world deployment. \url{https://gazebosim.org/home}} was the selected tool because it provides a physics engine, supports sensor and actuator modeling, and integrates well with ROS\footnote{ROS (Robot Operating System) is an open-source framework that provides tools, libraries, and conventions for developing, managing, and simulating robotic applications. \url{https://www.ros.org/}}, making it ideal for testing robotic systems.
+
 Illo principalmente su nos. Non message \emph{occidental} angloromanic
 da. Debitas effortio simplificate sia se, auxiliar summarios da que,
 se avantiate publicationes via. Pan in terra summarios, capital
