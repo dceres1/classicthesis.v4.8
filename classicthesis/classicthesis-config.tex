@@ -153,6 +153,25 @@
   belowcaptionskip=.75\baselineskip
   %frame=L
 }
+
+% For YAML files
+\lstdefinelanguage{yaml}{
+  keywords={true,false},
+  keywordstyle=\color{RoyalBlue}\bfseries,
+  basicstyle=\ttfamily\small,
+  sensitive=true,
+  comment=[l]{\#},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{Green}\ttfamily,
+  stringstyle=\color{YamlString},
+  showstringspaces=false,
+  moredelim=[l][\color{gray}]{-},
+  identifierstyle=\color{YamlKeyword}\bfseries,
+  emph={clustered,uniform,x},
+  emphstyle=\color{YamlString},
+  breaklines=true,
+  belowcaptionskip=.75\baselineskip,
+}
 % ****************************************************************************************************
 
 
