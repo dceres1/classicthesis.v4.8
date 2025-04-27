@@ -15,7 +15,7 @@ The development of systems with more than one drilling unit for weed removal com
 
 % 2) What are the technology challenges, and, in particular, what are the overall areas that must be addressed to solve the technical aspects of the problem? \\
 
-Idle time refers to periods when resources, such as drilling equipment, are not actively engaged in productive work. Reducing idle time in this context means minimizing the time tools remain unused and maximizing their productivity in weed removal. To achieve this, allocating detected plants to the correct tools is essential. In the literature, this process is known as task allocation. Some technical challenges to consider during implementation include computational latency and multi-tool coordination. The task allocation algorithm and execution pipeline must be fast enough to process new detections and reassign tools in real time without causing delays, while also ensuring that multiple drilling units operate efficiently without interference or redundancy.
+Idle time refers to periods when resources, such as drilling equipment, are not actively engaged in productive work. Reducing idle time in this context means minimizing the time tools remain unused and maximizing their productivity in weed removal. To achieve this, allocating detected plants to the correct tools is essential. In the literature, this process is known as \ac{TA}. Some technical challenges to consider during implementation include computational latency and multi-tool coordination. The \ac{TA} algorithm and execution pipeline must be fast enough to process new detections and reassign tools in real time without causing delays, while also ensuring that multiple drilling units operate efficiently without interference or redundancy.
 
 \section{Current Solutions}
 % 3) What are the capabilities of the current technology in the literature? \\
@@ -35,78 +35,80 @@ The multi-tool task allocation can take place in either a dynamic or static envi
 
 There are several ways to accomplish multi-tool allocation, including heuristic, cluster-based, market-based, learning-based, and optimization-based techniques. Table \ref{tab:task-allocation-approaches-1} and \ref{tab:task-allocation-approaches-2} presents a comprehensive classification of task allocation algorithms found in the literature.
 
-\begin{table}[bth]
-    \centering
-    \renewcommand{\arraystretch}{1.2} % Adjust row height
-    \begin{tabular}{|l|l|}
-        \hline
-        \textbf{Approach} & \textbf{Technique/Algorithm} \\ 
-        \hline
-        \multirow{7}{*}{Cluster Based} & SVCA \cite{MARTIN2023104314} \\ 
-        & Group Agent Partitioning \cite{9423979} \\ 
-        & Consensus-Based Distributed Task Allocation \cite{8584210} \\ 
-        & Voronoi Diagram-Based, K-Means Algorithm \cite{8970316}\\ 
-        & CBBA \cite{6787310} \\ 
-        & Cluster First Consensus-Based Strategy \\ 
-        & K-Means Clustering \\ 
-        \hline
-        \multirow{16}{*}{Market Based} & Auction Algorithm \cite{10023897} \\
+\begin{table}[htbp]
+    \myfloatalign
+    \setlength{\tabcolsep}{1.5em} % Default is 0.5em
+    \begin{tabularx}{\textwidth}{Xll}
+        \toprule
+        \tableheadline{Approach} & \tableheadline{Technique/Algorithm}\\ 
+        \midrule
+        
+        \multirow{7}{*}{Cluster Based} 
+        & \acs{SVCA}\label{acro:SVCA} \cite{MARTIN2023104314} \\
+        & Group Agent Partitioning \cite{9423979} \\
+        & \acs{CBDTA}\label{acro:CBDTA} \cite{8584210} \\
+        & \acs{VDKM}\label{acro:VDKM} \cite{8970316} \\
+        & \acs{CBBA}\label{acro:CBBA} \cite{6787310} \\
+        & Cluster First Consensus-Based Strategy \\
+        & K-Means Clustering \\
+        \midrule
+        
+        \multirow{14}{*}{Market Based} 
+        & Auction Algorithm \cite{10023897} \\
         & Improved Auction Algorithm \cite{9501305} \\
-        & Extended auction algorithm \\
-        & Distributed auction algorithm \\
-        & Sequential single-item auctions \\
-        & Auction-based algorithm \\
-        & Multihop-based auction algorithm \\
-        & Based on sequential single item auctions \\
-        & Consensus Based Parallel Auction and Execution Algorithm \\
-        & Extended sequential single item auction \\
-        & Distributed auction-based algorithm \\
-        & The consensus-based bundle algorithm \\
-        & Linear integer programming \\
-        & Contract Net protocol \\
-        \hline
-    \end{tabular}
-    \caption{Different Approaches to Task Allocation, Source \cite{10.1145/3700591}}
+        & Extended Auction Algorithm \\
+        & Distributed Auction Algorithm \\
+        & Sequential Single-Item Auctions \\
+        & Auction-Based Algorithm \\
+        & Multihop-Based auction Algorithm \\
+        & Based on Sequential Single Item Auctions \\
+        & \acs{CBPAEA}\label{acro:CBPAEA} \\
+        & Extended Sequential Single Item Auction \\
+        & Distributed Auction-Based Algorithm \\
+        & The Consensus-Based Bundle Algorithm \\
+        & Linear Integer Programming \\
+        & Contract Net Protocol \\
+        \bottomrule
+    \end{tabularx}
+    \caption[Task allocation approaches]{Comparative overview of cluster-based and market-based approaches to multi-agent \ac{TA}. \cite{10.1145/3700591}}
     \label{tab:task-allocation-approaches-1}
 \end{table}
 
-\begin{table}[H]
-    \centering
-    \renewcommand{\arraystretch}{1.2} % Adjust row height
-    \begin{tabular}{|l|l|}
-        \hline
-        \textbf{Approach} & \textbf{Technique/Algorithm} \\ 
-        \hline
-        \multirow{9}{*}{Learning Based} 
-        & Gated Recurrent Unit, Multi-layer Perceptron \cite{9700783} \\
+\begin{table}[thb]
+    \myfloatalign
+    \setlength{\tabcolsep}{2.5em} % Default is 0.5em
+    \begin{tabularx}{\textwidth}{Xll}
+        \toprule
+        \tableheadline{Approach} & \tableheadline{Technique/Algorithm}\\ 
+        \midrule
+        
+        \multirow{8}{*}{Learning Based} 
+        & \acs{GRU}\label{acro:GRU}, \acs{MLP}\label{acro:MLP} \cite{9700783} \\
         & Deep Reinforcement Learning \cite{app11072895} \\
         & Heterogeneous Graph Attention Network \\
-        & Capsule Attention-based Mechanism \\
-        & Encoder Decoder Architecture with cross attention mechanism \\
-        & Graph Neural Network (GNN) \\
-        & Q-Learning , Convolutional layers and a GRU \\
-        & Deep Reinforcement Learning \\
+        & Capsule Attention-Based Mechanism \\
+        & \acs{EDACAM}\label{acro:EDACAM} \\
+        & \acf{GNN}\label{acro:GNN} \\
+        & Q-Learning, \ac{CNN}\label{acro:CNN} and a \ac{GRU} \\
         & Graph Convolutional Neural Networks \\
-        \hline
-        \multirow{15}{*}{Optimization Based} 
-        & Mixed-integer quadratic program \\
-        & Centralized Hungarian method \cite{Lindsay2021} \\
+        \midrule
+        
+        \multirow{12}{*}{Optimization Based} 
+        & Mixed-Integer Quadratic Program \\
+        & Centralized Hungarian Method \cite{Lindsay2021} \\
         & Bin Maximum Item Doubled Packing \\
-        & Particle swarm optimization (PSO) algorithm \\
-        & Group theory and Optimization duality theory \\
-        & Particle Swarm Optimization \\
-        & Group theory and the optimization duality theory \\
+        & \ac{PSO}\label{acro:PSO} \\
+        & \ac{GTODT}\label{acro:GTODT} \\
         & Integer Programming \\
-        & Mixed-integer quadratic program (MIQP) \\
-        & A genetic algorithm (GA), A* algorithm \\
-        & Constraint based optimization as quadratic program \\
-        & Particle Swarm Optimization \\
-        & Heuristic based \\
-        & Diferential Evolution for multimodal problems \\
+        & \ac{MIQP}\label{acro:MIQP} \\
+        & \acf{GA}\label{acro:GA}, A* Algorithm \\
+        & \ac{COQP}\label{acro:COQP} \\
+        & Heuristic Based \\
+        & \ac{DEMP}\label{acro:DEMP} \\
         & Fuzzy Optimization \\
-        \hline
-    \end{tabular}
-    \caption{Different Approaches to Task Allocation, Source \cite{10.1145/3700591}}
+        \bottomrule
+    \end{tabularx}
+    \caption[Task allocation approaches]{Comparative overview of learning-based and optimization-based approaches to multi-agent \ac{TA}. \cite{10.1145/3700591}}
     \label{tab:task-allocation-approaches-2}
 \end{table}
 
@@ -138,7 +140,7 @@ Recent approaches to task allocation incorporate deep learning techniques such a
         \hline
     \end{tabular}
     }
-    \caption{A Comparison of different approaches to TA, Source \cite{10.1145/3700591}}
+    \caption{A Comparison of different approaches to \ac{TA}, Source \cite{10.1145/3700591}}
     \label{tab:approaches-comparison}
 \end{table}
 

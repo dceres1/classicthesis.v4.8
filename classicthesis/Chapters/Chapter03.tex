@@ -1,101 +1,36 @@
 %************************************************
-\chapter{Math Test Chapter}\label{ch:mathtest} % $\mathbb{ZNR}$
+\chapter{Task Allocation and Optimization}\label{ch:TA} % $\mathbb{ZNR}$
 %************************************************
-Ei choro aeterno antiopam mea, labitur bonorum pri no. His no decore
-nemore graecis. In eos meis nominavi, liber soluta vim cu. Sea commune
-suavitate interpretaris eu, vix eu libris efficiantur.
+ Solving the \ac{TA} problem in this context means assigning weed detections to removal tools in the most efficient way. The idea is to find the best allocation of resources and the optimal sequence of stops, that will maximize the number of plants removed, and minimize the tools' idle time. The solution has to consider the constraints of the problem such as:
 
-\section{Some Formulas}
-Due to the statistical nature of ionisation energy loss, large
-fluctuations can occur in the amount of energy deposited by a particle
-traversing an absorber element\footnote{Examples taken from Walter
-Schmidt's great gallery: \\
-\url{http://home.vrweb.de/~was/mathfonts.html}}.  Continuous processes
-such as multiple
-scattering and energy loss play a relevant role in the longitudinal
-and lateral development of electromagnetic and hadronic
-showers, and in the case of sampling calorimeters the
-measured resolution can be significantly affected by such fluctuations
-in their active layers.  The description of ionisation fluctuations is
-characterised by the significance parameter $\kappa$, which is
-proportional to the ratio of mean energy loss to the maximum allowed
-energy transfer in a single collision with an atomic electron:
-\graffito{You might get unexpected results using math in chapter or
-section heads. Consider the \texttt{pdfspacing} option.}
-\begin{equation}
-\kappa =\frac{\xi}{E_{\textrm{max}}} %\mathbb{ZNR}
-\end{equation}
-$E_{\textrm{max}}$ is the maximum transferable energy in a single
-collision with an atomic electron.
-\[
-E_{\textrm{max}} =\frac{2 m_{\textrm{e}} \beta^2\gamma^2 }{1 +
-2\gamma m_{\textrm{e}}/m_{\textrm{x}} + \left ( m_{\textrm{e}}
-/m_{\textrm{x}}\right)^2}\ ,
-\]
-where $\gamma = E/m_{\textrm{x}}$, $E$ is energy and
-$m_{\textrm{x}}$ the mass of the incident particle,
-$\beta^2 = 1 - 1/\gamma^2$ and $m_{\textrm{e}}$ is the electron mass.
-$\xi$ comes from the Rutherford scattering cross section
-and is defined as:
-\begin{eqnarray*} \xi  = \frac{2\pi z^2 e^4 N_{\textrm{Av}} Z \rho
-\delta x}{m_{\textrm{e}} \beta^2 c^2 A} =  153.4 \frac{z^2}{\beta^2}
-\frac{Z}{A}
-  \rho \delta x \quad\textrm{keV},
-\end{eqnarray*}
-where
+\begin{description}
+    \item[Geometric Constraints:] A stop is considered valid only if the weeds lie within the workspaces of the tools (observe \autoref{fig:problem-layout.png}).
+    \item[Movement Constraints:] The robot can only move forward in a straight line at a max speed of $0.3\frac{m}{s}$. % acceleration and deceleration times have to be considered.
+    \item[Task Processing:] Each plant removal takes approximately $45$ seconds, during which the robot must remain stationary to ensure a successful extraction. Movement during this process is not allowed as it could compromise the tool operation.
+    \item[Dynamic Environment:] Weed positions are initially unknown and are discovered dynamically during operation by the camera in front of the vehicle.
+    \item[Processing Time:] The solution must run online because the robot discovers new weeds during operation, and decisions about stopping and \ac{TA} must adapt in real-time.
+\end{description}
 
-\begin{tabular}{ll}
-$z$          & charge of the incident particle \\
-$N_{\textrm{Av}}$     & Avogadro's number \\
-$Z$          & atomic number of the material \\
-$A$          & atomic weight of the material \\
-$\rho$       & density \\
-$ \delta x$  & thickness of the material \\
-\end{tabular}
+We define a '\textit{good}' stop as the next robot position that maximizes plant coverage while keeps a balance on the number of tasks assigned to each implement (aiming to minimize idle time). The problem can be approached in two ways: one option is to first determine the optimal stop location, after which task allocation becomes trivial by simply assigning tasks based on whether they fall within the front or back workspace. Alternatively, we can first allocate tasks to the implements and then compute the stop position that satisfies the corresponding geometric constraints. Both approaches are similar, differing mainly in the order of operations, but each perspective opens the door to different methods and algorithms to try.
 
-$\kappa$ measures the contribution of the collisions with energy
-transfer close to $E_{\textrm{max}}$.  For a given absorber, $\kappa$
-tends
-towards large values if $\delta x$ is large and/or if $\beta$ is
-small.  Likewise, $\kappa$ tends towards zero if $\delta x $ is small
-and/or if $\beta$ approaches $1$.
+\begin{figure}[bth]
+    \centering
+    \includegraphics[width=\linewidth]{gfx/ch02/problem_layout.png}
+    \caption{Problem Layout Dimentions}
+    \label{fig:problem-layout.png}
+\end{figure}
 
-The value of $\kappa$ distinguishes two regimes which occur in the
-description of ionisation fluctuations:
+\section{Metrics}
+Defining a good set of metrics is crucial to establish a good point of comparison between solutions and easily determine the flaws of each method and determine the best solution. Building a dashboard for the summary of each mission was one of the acitivities 
 
-\begin{enumerate}
-\item A large number of collisions involving the loss of all or most
-    of the incident particle energy during the traversal of an absorber.
+\section{Heuristics}
+\lipsum[1]
 
-    As the total energy transfer is composed of a multitude of small
-    energy losses, we can apply the central limit theorem and describe
-    the fluctuations by a Gaussian distribution.  This case is
-    applicable to non-relativistic particles and is described by the
-    inequality $\kappa > 10 $ (\ie, when the mean energy loss in the
-    absorber is greater than the maximum energy transfer in a single
-    collision).
+\section{Graph Search}
+\lipsum[1]
 
-\item Particles traversing thin counters and incident electrons under
-    any conditions.
-
-    The relevant inequalities and distributions are $ 0.01 < \kappa < 10
-    $,
-    Vavilov distribution, and $\kappa < 0.01 $, Landau distribution.
-\end{enumerate}
-
-
-\section{Various Mathematical Examples}
-If $n > 2$, the identity
-\[
-    t[u_1,\dots,u_n] = t\bigl[t[u_1,\dots,u_{n_1}], t[u_2,\dots,u_n]
-    \bigr]
-\]
-defines $t[u_1,\dots,u_n]$ recursively, and it can be shown that the
-alternative definition
-\[
-    t[u_1,\dots,u_n] = t\bigl[t[u_1,u_2],\dots,t[u_{n-1},u_n]\bigr]
-\]
-gives the same result.
+\section{Optimization}
+\lipsum[1]
 
 %*****************************************
 %*****************************************

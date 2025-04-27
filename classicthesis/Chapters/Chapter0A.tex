@@ -22,7 +22,7 @@ vidit exerci appetere ad, ut vel zzril intellegam interpretaris.
 \section{Configuration Files}
 YAML files are the standard method for setting up configuration variables in the Nuga project. A collection of configuration examples is provided in this appendix.
 
-\begin{lstlisting}[language=yaml, frame=tb, caption={World YAML configuration example}, label={lst:world-yaml}, float=h]
+\begin{lstlisting}[language=yaml, frame=tb, caption={Weed Infestation World config example}, label={lst:world-yaml}, float=h]
     seed: 2
     quadrant_size: [2.0, 2.0]
     quadrants:
@@ -40,6 +40,40 @@ YAML files are the standard method for setting up configuration variables in the
         outside_workspace: false
 \end{lstlisting}    
 
+\begin{lstlisting}[language=yaml, frame=tb, caption={ROS$2$ config example}, label={lst:ros2_control-yaml}, float=htb]
+  # ROS2 Control
+  controller_manager:
+    ros__parameters:
+      use_sim_time: True
+      update_rate: 20 # Hz
+  
+      joint_state_broadcaster:
+        type: joint_state_broadcaster/JointStateBroadcaster
+  
+      forward_position_controller_front:
+        type: forward_command_controller/ForwardCommandController
+      
+      forward_position_controller_back:
+        type: forward_command_controller/ForwardCommandController
+  
+  forward_position_controller_front:
+    ros__parameters:
+      joints:
+        - front_x_axis_joint
+        - front_y_axis_joint
+        - front_implement_tool_joint
+      interface_name: position
+  
+  forward_position_controller_back:
+    ros__parameters:
+      joints:
+        - back_x_axis_joint
+        - back_y_axis_joint
+        - back_implement_tool_joint
+      interface_name: position
+\end{lstlisting} 
+
+\clearpage
 \section{Appendix Section Test}
 Test: \autoref{tab:moreexample} (This reference should have a
 lowercase, small caps \spacedlowsmallcaps{A} if the option
