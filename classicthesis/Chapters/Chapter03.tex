@@ -133,7 +133,7 @@ In our context, we exploit the advantages of graph-based algorithms by modeling 
 \begin{figure}[hbt]
     \centering
     \includegraphics[width=0.8\linewidth]{gfx/ch03/graph_search_nodes.png}
-    \caption{Node and cost representation}
+    \caption{Node types and cost representation}
     \label{fig:graph-search-nodes}
 \end{figure}
 
@@ -157,7 +157,7 @@ We observe that from \texttt{S3} four possible states can be reached (three \tex
 \begin{figure}[hbt]
     \centering
     \includegraphics[width=0.7\linewidth]{gfx/ch03/building_graph.png}
-    \caption{Node and cost representation}
+    \caption{Graph expansion process}
     \label{fig:building-graph}
 \end{figure}
 
@@ -165,22 +165,126 @@ Having the complete graph, and given its configuration as a weighted directed gr
 
 \begin{figure}[htb]
     \myfloatalign
-    \subfloat[Mission Category Metrics]
+    \subfloat[Path with lowest cost]
     {\label{fig:graph-solution}
         \includegraphics[width=.45\linewidth]{gfx/ch03/graph_solution.png}} \quad
-    \subfloat[Task Visualization]
+    \subfloat[Task Planning Visualization]
     {\label{fig:scenario-2-tasks}%
         \includegraphics[width=.45\linewidth]{gfx/ch03/scenario_2_tasks.png}} \\
-    \caption{Mission Dashboard}\label{fig:graph-search-solution}
+    \caption{Graph Search Solution}\label{fig:graph-search-solution}
 \end{figure}
 
 An optimal solution obtained by the graph search algorithm in a scenario with two detected weeds is illustrated in \autoref{fig:graph-solution}. The highlighted branch corresponds to the optimal path found by the algorithm. For the given two weeds, the graph contained 54 nodes, and the computation time was 0.001 seconds. A visual representation of the solution is shown in \autoref{fig:scenario-2-tasks}, including the current robot pose, projected workspaces in red, candidate stops in blue, and weeds in green.
 
+% How we avoid the algorithm chossing trivial solutions where no weeds are removed?
+One remaining issue to address is preventing the algorithm from returning trivial solutions in which either no weeds are removed or not all of them are. To tackle this, each node keeps track of the tasks completed so far. If, at the second-to-last node, there are still tasks left to remove, we assign a penalty cost to the edge leading to the final node. This encourages the algorithm to prioritize removing as many weeds as possible before proceeding to the last stop.
 
+Our graph search solution performs well in terms of computation time, for a low to medium density of weeds. However, as the number of weeds increases, the graph size grows exponentially, leading to longer computation times. \autoref{fig:graphsearch-performance} showcases the graph size and computation time for different number of weeds (see plot in red). The graph size is defined as the number of nodes in the graph, while the computation time is the time required to build and find the optimal path in the graph.
 
+\begin{figure}[htb]
+    \myfloatalign
+    \subfloat[Graph size vs. number of weeds]
+    {\label{fig:graphsearch-graph-size}%
+        \includegraphics[width=.45\linewidth]{gfx/ch03/gs_graph_size_plot.png}} \quad
+    \subfloat[Processing time vs. number of weeds]
+    {\label{fig:graphsearch-processing-time}%
+        \includegraphics[width=.45\linewidth]{gfx/ch03/gs_proce_time_plot.png}} \\
+    \caption{Graph Search algorithm performance}\label{fig:graphsearch-performance}
+\end{figure}
+
+We were able to optimize and reduce the graph size by applying a pruning technique that stops the growth of certain branches when they are not promising. This is achieved by introducing the concept of \textit{expired tasks}, these are tasks that haven't been removed and can no longer be removed in future stops because the corresponding weeds have been left behind, outside the tool's workspaces. This pruning is implemented in the \texttt{get\_children\_nodes} method, where each task is checked for expiration before being added to the graph. As a result, the number of nodes is significantly reduced, improving computation time (observe green plot in \autoref{fig:graphsearch-performance}).
+
+Although the graph search algorithm is a promising approach, it still suffers from the exponential growth of the graph size as the number of weeds increases. This can lead to longer computation times and may not be suitable for real-time applications with high weed densities. In the next section, we will explore optimization-based approaches that can potentially overcome these limitations and provide more efficient solutions.
 
 \section{Optimization}
-\lipsum[1]
+As discussed at the beginning of this chapter, the main goal of \ac{TA} is to find the best allocation of resources and the optimal sequence of stops while considering the given constraints. Achieving such a solution requires mathematically formulating the scenario as an optimization task, with a clearly defined objective function, set of constraints, and decision variables that fully describe the problem. Optimization-based approaches are powerful tools that provide a systematic way to find the best feasible solution to a problem by exproring the solution space. Depending on the nature of the problem, a different optimization formulation can be used, such as linear programming, \ac{MIP}, or nonlinear programming. In our case, we will focus on \ac{MIP} as the most suitable approach for the problem.
+
+\ac{MIP} is a mathematical optimization technique that combines both integer and continuous variables in the formulation of the problem. It allows for the modeling of complex decision-making scenarios where some variables must take on discrete values (e.g., binary decisions) while others can take on continuous values. This flexibility makes \ac{MIP} particularly useful for problems that involve resource allocation, scheduling, and other combinatorial optimization tasks. \\
+
+Given a set of tasks $\mathcal{T} = \{1,2,...,T\}$ where each task $j \in \mathcal{T}$ corresponds to one weed detection from a total $T$, and a set of candidate stops $\mathcal{S} = \{1,2,...,S\}$ where each stop $i \in \mathcal{S}$ is computed using events as in Graph Search algorithm. Let $x_{i,j} \in \{0,1\} $ be a binary decision variable equal to $1$ if task $j$ is assigned to stop $i$, $0$ otherwise and ${imb}_i \in \mathbb{N}_0$ the imbalance of assigned tasks between tools at stop $i$. We know that from each stop $i$ we can only assign tasks that are visible from that stop, and a subset for those corresponds to tasks set to front or back tools, these statements could be better defined as:
+
+\begin{tabular}{ll}
+    $\mathcal{V}_i \subseteq \mathcal{T}$ & Set of tasks visible from stop $i$ \\
+    $\mathcal{F}_i \subseteq \mathcal{V}_i$ & Front tool task assigned at stop $i$ \\
+    $\mathcal{B}_i \subseteq \mathcal{V}_i$ & Back tool task assigned at stop $i$ \\
+    $\tau$ & Constant processing time per task \\
+\end{tabular}
+
+We know that each task must be assigned to exactly one stop.
+
+\begin{equation}
+    \sum_{i=1}^{S} x_{i,j} = 1 \quad \forall j \in \mathcal{T}
+\end{equation}
+
+While visible tasks can only be assigned its corresponding stops.
+
+\begin{equation}
+    x_{i,j} = 0 \quad \text{if} \quad j \notin \mathcal{V}_i
+\end{equation}
+
+The imbalance per stop is the absolute time difference between front and back tools.
+
+\begin{equation}
+    f_i = \sum_{j \in \mathcal{F}_i} x_{i,j} \quad \text{and} \quad b_i = \sum_{j \in \mathcal{B}_i} x_{i,j}
+\end{equation}
+
+We want the imbalance ${imb}_i$ to reflect the time difference between front and back processing times at each stop. Therefore, we define the imbalance as the maximum of the two possible differences.
+
+\begin{equation}
+    \left| \tau (f_i - b_i) \right| = \max \left( f_i - b_i, b_i - f_i \right)
+\end{equation}
+
+Thus
+
+\begin{equation}
+    {imb}_i \geq \tau \left(f_i - b_i\right) \quad \text{and} \quad {imb}_i \geq \tau \left(b_i - f_i\right)
+\end{equation}
+
+Or equivalently
+
+\begin{equation}
+    {imb}_i \geq \left| \tau (f_i - b_i) \right| \quad \forall i \in \mathcal{S}
+\end{equation}
+
+The objective function is to minimize the total idle time, expressed as follows
+
+\begin{equation}
+    \min \sum_{i=1}^{S} {imb}_i
+\end{equation}
+
+Given the constraints and objective function, we can formulate the optimization problem as follows:
+
+\begin{equation}
+    \begin{aligned}
+        \text{minimize} & \quad \sum_{i=1}^{S} {imb}_i \\
+        \text{subject to} & \quad \sum_{i=1}^{S} x_{i,j} = 1 \quad \forall j \in \mathcal{T} \\
+                          & \quad x_{i,j} = 0 \quad \text{if} \quad j \notin \mathcal{V}_i
+    \end{aligned}
+\end{equation}
+
+An advantage of an optimization-based approach is that once the problem is formulated we can use existing optimization libraries to obtain the solution. In our case, we used the \texttt{Google OR-Tools}\footnote{OR-Tools is an open source software suite for optimization, tuned for tackling the world's toughest problems in vehicle routing, flows, integer, linear, and constraint programming. \url{https://developers.google.com/optimization}} library to solve our combinatorial problem.
+
+The pipeline for the optimization-based approach is as follows:
+\begin{enumerate}
+    \item Compute \textbf{candidate stops} based on the robot's current position and weed detections.
+    \item \textbf{Associate} reachable weeds with candidate stops.
+    \item Build the \textbf{optimization model} using decision variables, constraints, and objective function.
+    \item \textbf{Call solver} to get solution.
+    \item \textbf{Decode solution} and return the next optimal stop and task allocation as the algorithm's output.
+\end{enumerate}
+
+This method does not suffer from high processing times as weed density increases. The algorithm consistently returns a solution in less than 0.1 seconds across a range of weed densities, from low to extremely high (tested up to $6.25$ weeds/m²), making it a strong candidate for real-time applications. The optimization model effectively balances tasks between tools while minimizing idle time. \autoref{fig:mip-solution} illustrates an example of the solution generated by the optimization algorithm in a scenario with twenty weeds.
+
+\begin{figure}[htb]
+    \myfloatalign
+    \subfloat[Optimization Output]
+    {\label{fig:mip-algorithm-output}
+        \includegraphics[width=.35\linewidth]{gfx/ch03/mip_solution.png}} \quad
+    \subfloat[Task Planning Visualization]
+    {\label{fig:mip-scenario-10-tasks}%
+        \includegraphics[width=.55\linewidth]{gfx/ch03/mip_scenario_20tasks.png}} \\
+    \caption{Mixed-Integer Programming}\label{fig:mip-solution}
+\end{figure}
 
 \section{Market-based}
 \lipsum[1]
