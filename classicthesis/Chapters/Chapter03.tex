@@ -279,15 +279,94 @@ This method does not suffer from high processing times as weed density increases
     \myfloatalign
     \subfloat[Optimization Output]
     {\label{fig:mip-algorithm-output}
-        \includegraphics[width=.35\linewidth]{gfx/ch03/mip_solution.png}} \quad
+        \includegraphics[width=.40\linewidth]{gfx/ch03/mip_solution.png}} \quad
     \subfloat[Task Planning Visualization]
     {\label{fig:mip-scenario-10-tasks}%
         \includegraphics[width=.55\linewidth]{gfx/ch03/mip_scenario_20tasks.png}} \\
-    \caption{Mixed-Integer Programming}\label{fig:mip-solution}
+    \caption{Mixed-Integer Programming Solution}\label{fig:mip-solution}
 \end{figure}
 
 \section{Market-based}
-\lipsum[1]
+Market-based approaches are a class of algorithms that leverage the principles of supply and demand to solve task allocation problems. In our context, we consider the set of visible tasks from each candidate stop ($\mathcal{V}_i \subseteq \mathcal{T}$). Given these tasks, the algorithm forms all possible combinations of allocations and generates a bid for each one. The allocation is then determined based on the bids received and selecting the best one. A '\textit{better bid}' is defined as the combination that maximizes the number of removed weeds while minimizing the imbalance between tools (i.e., idle time). The algorithm is designed to be fast and efficient, making it suitable for real-time applications. Nevertheless, since the approach always selects the best next stop, it falls into the category of greedy algorithms due to its shortsighted nature. In some cases, it is necessary to sacrifice productivity at the next stop to benefit the overall solution, as illustrated in \autoref{fig:heuristics-suboptimal} and \autoref{fig:heuristics-optimal}. The main advantage of this approach is its ability to adapt to dynamic environments where tasks change over time.
+
+The next stop computation follows a similar pipeline to previous algorithms, with the main differences being the use of a bidding process to determine the best solution and the computation of candidate stops. Algorithm~\ref{alg:run-algorithm} outlines the steps involved during the algorithm.
+
+\begin{algorithm}
+    \caption{Run Algorithm (Market-Based)}
+    \label{alg:run-algorithm}
+    \begin{algorithmic}[1]
+    \REQUIRE Current tasks and robot pose
+    \ENSURE Best stop and task assignment with shortest idle time
+    
+    \STATE $\texttt{candidate\_stops} \gets \texttt{get\_candidate\_stops()}$
+    \STATE \texttt{associate\_tasks\_with\_stops(candidate\_stops)}
+    \IF{\texttt{log\_print}}
+        \STATE \texttt{log("Collecting Biddings...")}
+    \ENDIF
+    \STATE \texttt{start\_timer()}
+    \STATE $(\texttt{stop}, \texttt{tasks}, \texttt{idle\_time}) \gets \texttt{get\_best\_bid()}$
+    \STATE $\texttt{sw\_time} \gets \texttt{stop\_timer()}$
+    \IF{\texttt{log\_print}}
+        \STATE \texttt{log("Processing time: "} $\texttt{sw\_time}$\texttt{"s")}
+        \STATE \texttt{log("Shortest time found: "} $\texttt{idle\_time}$\texttt{"s")}
+    \ENDIF
+    \STATE \textbf{return} $(\texttt{stop}, \texttt{tasks}, \texttt{idle\_time})$
+    \end{algorithmic}
+\end{algorithm}
+    
+The candidate stops are computed by considering only the closest weed detection and the events this task generate within the back tool workspace. These events include:
+
+\begin{enumerate}
+    \item Entering the workspace.
+    \item The stop position where the weed is about to exit (rather than when it fully exits).
+\end{enumerate}
+
+Using these two candidate poses, we generate evenly distributed positions to create additional candidates between these two events. Afterwards, we perform task association per stop as usual and call \texttt{get\_best\_bid} to start the bidding process and obtain the solution. The algorithm iterates through all possible combinations of tasks at each stop, calculating the idle time for each combination. The combination with the lowest idle time and more number of weeds is selected as the best bid. This process is repeated for all candidate stops, and the best overall stop and task allocation are returned (observe Algorithm \ref{alg:get-best-bid}).
+
+\begin{algorithm}[H]
+    \caption{Get Best Bid}
+    \label{alg:get-best-bid}
+    \begin{algorithmic}[1]
+    \REQUIRE Candidate stops with associated tasks
+    \ENSURE Best stop and task assignment with minimum idle time
+    
+    \STATE $\text{bid} \gets \text{Bid}(\emptyset, \infty)$
+    \STATE $\text{stops} \gets [\ ]$
+    \STATE $\text{best\_stop} \gets \text{None}$
+    \STATE $\text{best\_bid} \gets \text{None}$
+    
+    \FOR{$i, \text{stop} \in \text{enumerate(candidate\_stops)}$}
+        \STATE $\text{tasks\_per\_stop} \gets [\ ]$
+        \FOR{$\text{task} \in \text{stop["tasks"]}$}
+            \STATE $\text{tasks\_per\_stop.append(task)}$
+        \ENDFOR
+    
+        \STATE $\text{combinations} \gets \text{get\_all\_combinations(tasks\_per\_stop)}$
+        \STATE $\text{idle} \gets \text{get\_idle\_per\_combination(combinations)}$
+        \STATE $\text{bid} \gets \text{get\_bid(zip(combinations, idle))}$
+        \IF{\text{update\_bid\_if\_better(bid)}}
+            \STATE $\text{best\_stop} \gets i$
+            \STATE $\text{best\_bid} \gets \text{bid}$
+        \ENDIF
+    \ENDFOR
+    
+    \RETURN $\text{stops[best\_stop]}, \text{best\_bid.tasks}, \text{best\_bid.idle}$
+    \end{algorithmic}
+\end{algorithm}
+    
+
+An example of the solution produced by this algorithm is illustrated in \autoref{fig:mkt-solution}. We can observe that only four candidate stops are generated for four tasks. Notice the contrast with the graph search in \autoref{fig:scenario-2-tasks} and the optimization approach in \autoref{fig:mip-scenario-10-tasks}.
+
+\begin{figure}[htb]
+    \myfloatalign
+    \subfloat[Market-based Output]
+    {\label{fig:mkt-algorithm-output}
+        \includegraphics[width=.45\linewidth]{gfx/ch03/mkt_solution.png}} \quad
+    \subfloat[Task Planning Visualization]
+    {\label{fig:mkt-scenario-4-tasks}%
+        \includegraphics[width=.50\linewidth]{gfx/ch03/mrk_scenario_4tasks.png}} \\
+    \caption{Market-based Solution}\label{fig:mkt-solution}
+\end{figure}
 
 %*****************************************
 %*****************************************

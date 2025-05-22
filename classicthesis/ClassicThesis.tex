@@ -68,19 +68,19 @@
 %********************************************************************
 % Frontmatter
 %*******************************************************
-\include{FrontBackmatter/DirtyTitlepage}
+%\include{FrontBackmatter/DirtyTitlepage}
 \include{FrontBackmatter/Titlepage}
 \include{FrontBackmatter/Titleback}
-\cleardoublepage\include{FrontBackmatter/Dedication}
+%\cleardoublepage\include{FrontBackmatter/Dedication}
 %\cleardoublepage\include{FrontBackmatter/Foreword}
-\cleardoublepage\include{FrontBackmatter/Abstract}
-\cleardoublepage\include{FrontBackmatter/Publications}
-\cleardoublepage\include{FrontBackmatter/Acknowledgments}
+\include{FrontBackmatter/Abstract}
+%\cleardoublepage\include{FrontBackmatter/Publications}
+\include{FrontBackmatter/Acknowledgments}
 \cleardoublepage\include{FrontBackmatter/Contents}
 %********************************************************************
 % Mainmatter
 %*******************************************************
-\cleardoublepage
+%\cleardoublepage
 \pagestyle{scrheadings}
 \pagenumbering{arabic}
 %\setcounter{page}{90}
@@ -102,6 +102,7 @@ da. Le usate medical addresses pro, europa origine sanctificate nos se.}
 %\addtocontents{toc}{\protect\clearpage} % <--- just debug stuff, ignore
 \include{Chapters/Chapter03}
 %\include{multiToC} % <--- just debug stuff, ignore for your documents
+\cleardoublepage\include{Chapters/Chapter04}
 % ********************************************************************
 % Backmatter
 %*******************************************************
