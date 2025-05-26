@@ -21,23 +21,23 @@ We define a '\textit{good}' stop as the next robot position that maximizes plant
 \end{figure}
 
 \section{Metrics}
-Defining a good set of metrics is crucial to establish a solid basis for comparison between solutions and to easily identify the flaws of each method, thereby determining the best solution. To address this, we define two main categories. The first summarizes mission-level metrics such as the total idle and productive time of each tool, and the total time the robot spends moving or in a stationary state (defined by equations \ref{eq:total-mission-time} and \ref{eq:tool-usage-time}). The second category includes task-specific information, for example, task ID, status ('\textit{compleated}', '\textit{failed}', '\textit{out}'), number of stops, the tool that processed the task, and the idle and productive time of each tool at that specific stop. These metrics are displayed in a mission dashboard for easy visualization and comparison across missions using different worlds or algorithms (see \autoref{fig:mission-metrics} for the first category and \ref{fig:task-metrics} for the second one).
+Defining a good set of metrics is crucial to establish a solid basis for comparison between solutions and to easily identify the flaws of each method, thereby determining the best solution. To address this, we define two main categories. The first summarizes mission-level metrics such as the total idle and productive time of each tool, and the total time the robot spends moving or in a stationary state (defined by equations \ref{eq:total-mission-time} and \ref{eq:tool-usage-time}). The second category includes task-specific information, for example, task ID, status ('\textit{compleated}', '\textit{failed}', '\textit{out}'), number of stops, the tool that processed the task, and the idle and productive time of each tool at that specific stop. These metrics are displayed in a mission dashboard for easy visualization and comparison across missions using different scenarios or algorithms (see \autoref{fig:mission-metrics} for the first category and \ref{fig:task-metrics} for the second one).
 
 \begin{figure}[htb]
     \myfloatalign
-    \subfloat[Mission Category Metrics]
-    {\label{fig:mission-metrics}
-        \includegraphics[width=.45\linewidth]{gfx/ch03/mission_metrics.png}} \quad
     \subfloat[Task Visualization]
     {\label{fig:task-metrics}%
-        \includegraphics[width=.45\linewidth]{gfx/ch03/task_metrics.png}} \\
+        \includegraphics[width=.45\linewidth]{gfx/ch03/task_metrics.png}} \quad
+    \subfloat[Mission Category Metrics]
+    {\label{fig:mission-metrics}
+        \includegraphics[width=.45\linewidth]{gfx/ch03/mission_metrics.png}} \\
     \caption{Mission Dashboard}\label{fig:mission-dashboard}
 \end{figure}
 
+\paragraph{\autoref{fig:task-metrics}} Displays a 2D grid of the removed tasks' positions during the mission, along with their corresponding metadata. Hovering over a task reveals its details, and tasks can be filtered by mission.
 
 \paragraph{\autoref{fig:mission-metrics}} Showcases a bar graph comparing different missions. Each mission includes the robot's moving and stationary time, as well as the idle and productive time of the onboard implement tools. A hover feature displays the value of each category.
 
-\paragraph{\autoref{fig:task-metrics}} Displays a 2D grid of the removed tasks' positions during the mission, along with their corresponding metadata. Hovering over a task reveals its details, and tasks can be filtered by mission.
 
 \begin{equation}
     t_{mission} = t_{moving} + t_{stationary}
