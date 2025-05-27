@@ -104,10 +104,34 @@ The \ac{IT} is controlled using ROS$2$ actions, which provide a structured way t
 \lipsum[1]
 
 \subsection{Weed Detection}
-\lipsum[1]
+Paltech uses an in-house machine learning model for Rumex recognition, trained on a dataset of images captured under various lighting conditions. The model is integrated into the simulation using a ROS2 node that subscribes to the camera topic and publishes detection results. This node processes camera images, applies the trained model, and outputs the detected plants’ positions in camera coordinates along with confidence scores. This integration enables real-time detection of Rumex within the simulated environment, supporting planning and execution of extraction tasks. The model’s training dataset includes images such as the one shown in \autoref{fig:rumex-trainning}, and it is capable of generalizing to simulation images, as illustrated in \autoref{fig:rumex-sim}.
+
+\begin{figure}[htb]
+    \myfloatalign
+    \subfloat[Trainning dataset image]
+    {\label{fig:rumex-trainning}%
+        \includegraphics[width=.45\linewidth]{gfx/ch02/rumex.png}} \quad
+    \subfloat[Weed detection in simulation]
+    {\label{fig:rumex-sim}
+        \includegraphics[width=.45\linewidth]{gfx/ch02/rumex_sim.png}} \\
+    \caption{Example of trainning and detection}\label{fig:rumex-example}
+\end{figure}
 
 \subsection{Nuga Controller}
-\lipsum[1]
+The Nuga controller is the main node responsible for orchestrating the movement of the robot, managing the \ac{IT} units, and performing task allocation based on the weed positions received from the detection node. A high-level overview of the controller's operation is shown in \autoref{fig:nuga-controller}. The timer callbacks \texttt{get\_ws\_limits()} and \texttt{get\_imp\_offsets()} are self-destructive timers used to retrieve the positions of the tool workspace limits and their offsets relative to the \texttt{base\_link}. Once this information is received, the timers are destroyed. The same applies to the callback of the \textit{/head\_camera/camera\_info} topic, which is used to obtain the camera’s central pixel position for later use.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.95\linewidth]{gfx/ch02/nuga_controller.png}
+    \caption{Nuga Controller ROS Interface}
+    \label{fig:nuga-controller}
+\end{figure}
+
+The \texttt{get\_next\_stop()} function is a timer callback that computes the robot's next stop when required. It uses the current detections, the robot's pose, and the selected task allocation algorithm to determine the next target position, as well as the tasks to be executed at that stop by each \ac{IT}. The execution steps followed by this method are shown in Algorithm \ref{alg:get-next-stop}.
+
+Once a stop is determined, Nuga’s movement and velocity controllers govern the robot’s behavior. The \texttt{nuga\_movement\_controller()} function switches the robot’s state between \textit{stationary} and \textit{moving}, while also measuring the time spent in each state. If the robot reaches the target position, this method triggers the actions required to perform the extraction cycle; otherwise, it keeps the robot in the \textit{moving} state. Finally, \texttt{nuga\_velocity\_controller()} takes the robot’s state and computes the necessary velocity commands, publishing them to the \textit{/cmd\_vel} topic.
+
+
 
 %*****************************************
 %*****************************************

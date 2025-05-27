@@ -140,7 +140,9 @@ The simulation results are summarized in \autoref{tab:low-results}, \autoref{tab
     \label{tab:low-results}
 \end{table}
 
-\paragraph{\autoref{tab:low-results}} Illustrates the convention used to represent the graph. 
+\paragraph{\autoref{tab:low-results}} Confirms that there is no significant improvement in mission time or tool productivity when using more sophisticated algorithms in low-density scenarios. We observe that the market-based approach was the only one to achieve a reduction in total mission time, with a $5.3\%$ decrease compared to the baseline method. In contrast, the graph search and optimization methods actually increased the mission time by $2.8\%$ and $0.6\%$, respectively.
+
+Regarding tool productivity, we observe a shift in which tool experiences more idle time: from the front tool in the baseline to the back tool in the cases of graph search and optimization. Despite this shift, both methods reduced the back tool’s idle time from $12.8$ minutes to $9.8$ minutes. The market-based method maintained the front tool as the one with the highest idle time but still achieved a $35.2\%$ reduction.
 
 \begin{table}[H]
     \centering
@@ -307,3 +309,7 @@ The simulation results are summarized in \autoref{tab:low-results}, \autoref{tab
     \caption{High-density Simulation Results}
     \label{tab:high-results}
 \end{table}
+
+\paragraph{\autoref{tab:medium-results}} Highlights the improvements achieved in medium-density scenarios by the implemented algorithms over the heuristic approach. The graph search, optimization, and market-based methods reduced mission time by $9.6\%$, $4.5\%$, and $5.2\%$, respectively. Additionally, they achieved more balanced tool usage and reductions in idle time up to $88.7\%$ for the front tool. The observed increment in back tool idle time is attributed to the heuristic method’s unbalanced tool usage, which resulted in a very low idle time for only one tool, which is not desired.
+
+\paragraph{\autoref{tab:high-results}} Demonstrates the effectiveness of the proposed algorithms in high-density scenarios. The graph search, optimization, and market-based methods achieved mission time reductions of $13.0\%$, $22.8\%$, and $19.3\%$, respectively. In terms of tool usage, all three methods achieved a balanced tool usage, with reductions in idle time of up to $87.8\%$ for the front tool and up to $94.9\%$ for the back tool.
