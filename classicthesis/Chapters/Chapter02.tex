@@ -129,9 +129,20 @@ The Nuga controller is the main node responsible for orchestrating the movement 
 
 The \texttt{get\_next\_stop()} function is a timer callback that computes the robot's next stop when required. It uses the current detections, the robot's pose, and the selected task allocation algorithm to determine the next target position, as well as the tasks to be executed at that stop by each \ac{IT}. The execution steps followed by this method are shown in Algorithm \ref{alg:get-next-stop}.
 
-Once a stop is determined, Nuga’s movement and velocity controllers govern the robot’s behavior. The \texttt{nuga\_movement\_controller()} function switches the robot’s state between \textit{stationary} and \textit{moving}, while also measuring the time spent in each state. If the robot reaches the target position, this method triggers the actions required to perform the extraction cycle; otherwise, it keeps the robot in the \textit{moving} state. Finally, \texttt{nuga\_velocity\_controller()} takes the robot’s state and computes the necessary velocity commands, publishing them to the \textit{/cmd\_vel} topic.
+Once a stop is determined, Nuga’s movement and velocity controllers govern the robot’s behavior. The \texttt{nuga\_movement\_controller()} function switches the robot’s state between \textit{stationary} and \textit{moving} when needed, while also measuring the time spent in each state. If the robot reaches the target position, this method stops the robot and triggers the actions required to perform the extraction cycle; otherwise, it keeps the robot in the \textit{moving} state. Finally, \texttt{nuga\_velocity\_controller()} takes the robot’s state and computes the necessary velocity commands, publishing them to the \textit{/cmd\_vel} topic.
 
+The callback \texttt{update\_mission\_status()} continuously checks whether the robot has reached the end-of-mission position in order to stop it and generate log information for mission metrics. On the other hand, \texttt{update\_tasks\_status()} continuously publishes the status of all weed detections to the \textit{/tasks\_status} topic. These tasks can include those assigned to the back or front tool, current detections, tasks outside the future path, and failed tasks.
 
+Finally, \texttt{publish\_markers()} updates RViz markers to visualize robot position and task status. \autoref{fig:rviz-visualization} shows an example of the RViz visualization in a usual mission.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{gfx/ch02/rviz_black_1.png}
+    \caption{RViz Visualization}
+    \label{fig:rviz-visualization}
+\end{figure}
+
+\paragraph{\autoref{fig:rviz-visualization}} Displays the current position of the robot (\texttt{base\_link}), the tool workspaces, and tool positions using coordinate frames. Task categories are indicated with colored spheres: green for successful tasks, orange for tasks outside the path, red for failed tasks, and blue for robot stops. The workspace projections of the onboard tools are shown using red rectangles, while the green rectangle represents the front camera’s field of view.
 
 %*****************************************
 %*****************************************
