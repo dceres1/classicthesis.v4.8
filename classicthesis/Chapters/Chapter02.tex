@@ -1,148 +1,375 @@
 %*****************************************
-\chapter{Simulation}\label{ch:simulation}
+\chapter{Methodology}\label{ch:methodology}
 %*****************************************
-\section{The Robot}\label{sec:nuga}
-Nuga is Paltech's solution for speeding up the weed removal process. Nuga is a mobile platform equipped with two drilling mechanisms, also called \ac{IT}, one main camera at the front for plant detection, two internal cameras for fine adjustment during tools' placement, an IMU, and two GNSS antennas for GPS localization. Each \ac{IT} is mounted on a structure with three \ac{DOF} using prismatic joints, allowing movement in X, Y, and Z directions.
+%************************************************
+\section{Task Allocation and Optimization}\label{sec:TA}
+%************************************************
+ Solving the \ac{TA} problem in this context means assigning weed detections to removal tools in the most efficient way. The idea is to find the best allocation of resources and the optimal sequence of stops, that will maximize the number of plants removed, and minimize the tools' idle time. The solution has to consider the constraints of the problem such as:
+
+\begin{description}
+    \item[Geometric Constraints:] A stop is considered valid only if the weeds lie within the workspaces of the tools (observe \autoref{fig:problem-layout.png}).
+    \item[Movement Constraints:] The robot can only move forward in a straight line at a max speed of $0.3\frac{m}{s}$. % acceleration and deceleration times have to be considered.
+    \item[Task Processing:] Each plant removal takes approximately $45$ seconds, during which the robot must remain stationary to ensure a successful extraction. Movement during this process is not allowed as it could compromise the tool operation.
+    \item[Dynamic Environment:] Weed positions are initially unknown and are discovered dynamically during operation by the camera in front of the vehicle.
+    \item[Processing Time:] The solution must run online because the robot discovers new weeds during operation, and decisions about stopping and \ac{TA} must adapt in real-time.
+\end{description}
+
+We define a '\textit{good}' stop as the next robot position that maximizes plant coverage while keeps a balance on the number of tasks assigned to each implement (aiming to minimize idle time). The problem can be approached in two ways: one option is to first determine the optimal stop location, after which task allocation becomes trivial by simply assigning tasks based on whether they fall within the front or back workspace. Alternatively, we can first allocate tasks to the implements and then compute the stop position that satisfies the corresponding geometric constraints. Both approaches are similar, differing mainly in the order of operations, but each perspective opens the door to different methods and algorithms to try.
 
 \begin{figure}[bth]
     \centering
-    \includegraphics[width=0.7\linewidth]{gfx/ch02/nuga_cad.png}
-    \caption{Nuga Platform}
-    \label{fig:nuga-cad}
+    \includegraphics[width=\linewidth]{gfx/ch02/problem_layout.png}
+    \caption{Problem Layout Dimentions}
+    \label{fig:problem-layout.png}
 \end{figure}
 
-
-% See classicthesis-config.tex for changing the prefixes of the refs
-% Testing for autoref: \autoref{ch:intro}, \autoref{ch:examples}, and \autoref{sec:new}
-
-%Testing for ``clever'' references: \cref{ch:intro} and \cref{ch:examples}
-% Ugly work-around
-% Part~\textsc{\ref{pt:showcase}}
-
-
-\section{Simulation}\label{sec:simulation}
-A representative simulation of reality is crucial for developing new algorithms and analyzing robot behavior before real-world implementation. Therefore, building a simulation of the project was a foundational step for this work, ensuring a controlled environment for validation and testing. Gazebo\footnote{Gazebo is a physics-based robotics simulation tool that allows testing and validation of robot models before real-world deployment. \url{https://gazebosim.org/home}} was the selected tool because it provides a physics engine, supports sensor and actuator modeling, and integrates well with ROS\footnote{ROS (Robot Operating System) is an open-source framework that provides tools, libraries, and conventions for developing, managing, and simulating robotic applications. \url{https://www.ros.org/}}, making it ideal for testing robotic systems.
-
-The simulation consists of six key components: URDF files define the robot's structure and properties, SDF files describe the virtual environment, and Gazebo plugins provide additional functionality, such as simulating custom sensors, actuators, or control interfaces. Additionally, core system operations include joint control for managing the movement of the \ac{IT}, localization for tracking the robot’s position, and weed detection, which relies on an AI model for Rumex recognition. \autoref{fig:building-sim} illustrates these components as building blocks for the simulation.
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.5\linewidth]{gfx/ch02/simulator.png}
-    \caption{Simulator Components}
-    \label{fig:building-sim}
-\end{figure}
-
-\subsection{URDF}
-\ac{URDF} is an XML file used to describe multibody systems for robot simulation. It defines the visual, collision, and inertial properties of rigid body objects, as well as their connections (\emph{joints}). This establishes a spatial relationship between frames, which ROS and Gazebo can later interpret for control and visualization. This file also allows modeling different types of sensors and incorporating Gazebo plugins to link it with ROS control actions. We exploit these capabilities to define camera intrinsics, IMU behavior, GPS properties, and control the \ac{IT} using \texttt{ros2\_control}\footnote{\texttt{ros2\_control} is a ROS 2 framework that provides a standardized interface for managing hardware, enabling modular and reusable control systems for robots. \url{https://control.ros.org/rolling/doc/getting_started/getting_started.html}}.
-
-\autoref{fig:urdf-structure} displays the structure of the URDF files, being nuga the highest level entity that joins the robot description, gazebo sensor modeling and plugins, as well as \texttt{ros2\_control} configuration. Nuga description defines the robot's physical structure, including its links (e.g., chassis, wheels, camera support), joints (fixed, continuous, prismatic connections), sensors (cameras, IMU, GPS), and inertial properties. It organizes these components into a kinematic tree (e.g., base\_link -> chassis\_link -> wheels/sensors) using macros for modularity, and resulting in the model displayed in \autoref{fig:nuga-urdf}.
-
-\begin{figure}[hbt]
-    \myfloatalign
-    \subfloat[URDF files structure.]
-    {\label{fig:urdf-structure}
-        \includegraphics[width=.45\linewidth]{gfx/ch02/urdf.png}} \quad
-    \subfloat[RViz visualization of Nuga description.]
-    {\label{fig:nuga-urdf}%
-        \includegraphics[width=.45\linewidth]{gfx/ch02/nuga_urdf.png}} \\
-    \caption[Robot definition using URDF]{Robot definition using URDF}
-\end{figure}
-
-\subsection{SDF}
-\ac{SDF} also written in XML, describes the properties of the virtual world. Gazebo uses this file to define the terrain, obstacles, lighting conditions, physics parameters, and other environmental elements that affect the robot’s interaction with the simulation. Having repeatability in a simulated world is important for debuging and testing purposes, for this reason a Python script was used to generate easy to configure worlds from a YAML configuration file. An example of the config file is shown in \autoref{lst:world-yaml}. For reproducibility, a seed value is configured in the simulation settings, the weed infestation pattern is defined within quadrants of specified dimensions (\texttt{quadrant\_size}) and each quadrant is individually configured with:
-
-\begin{itemize}
-    \item Spatial distribution:
-    \begin{itemize}
-        \item \textit{uniform}: Random uniform distribution
-        \item \textit{clustered}: Random normal distribution with definable standard deviations ($\sigma_x, \sigma_y$)
-    \end{itemize}
-    \item Weed density: Weeds per square meter (weeds/m²)
-    \item Direction: Propagation axis for adjacent quadrants ($\pm x,\pm y$)
-    \item Workspace expansion: If \texttt{outside\_workspace} is true, the infestation area extends 10\% beyond the quadrant boundaries.
-\end{itemize}
-
-A visual result of the generated world using such configuration file is shown in \autoref{fig:world}.
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.4\linewidth]{gfx/ch02/world.png}
-    \caption{Weed Infestation Example}
-    \label{fig:world}
-\end{figure}
-
-\subsection{Gazebo Plugins}
-The files \texttt{nuga\_gazebo} and \texttt{sensors\_gazebo} from \autoref{fig:urdf-structure} instantiate and configure Gazebo plugins to define sensor behavior, including optical properties for the camera, as well as update rates and noise models for the IMU and GPS. The file \texttt{nuga\_ros2\_control} on the other hand, establishes an interface between the \ac{IT} 's joints and \texttt{ros2\_control} framework, specifying the command interface (position), controller type (forward position controller), and movement limits, enabling 3-\ac{DOF} prismatic motion for each tool. Regarding movement control of the Nuga vehicle, the \texttt{ros\_planar\_move} plugin satisfied all control requirements given the platform's kinematic constraints, eliminating the need for additional configuration.
-
-\subsection{Joint Control}
-The control of both \ac{IT} units was handled using the \texttt{ros2\_control} framework (configuration example shown in \autoref{lst:ros2_control-yaml}), as previously described. This framework provides a seamless transition between simulation and real hardware control. In this context, the \texttt{forward\_command\_controller} was used, which is recommended for simulation because it bypasses PID computations by directly sending commands to simulated joints. These joints already track positions perfectly, without the disturbances or error correction needed in real-world scenarios. Simulators like Gazebo inherently handle ideal position tracking, making closed-loop control redundant. However, when switching to real hardware, replacing it with a \texttt{position\_controller} is needed but straightforward thanks to the flexibility of the framework.
-
-Nuga's workspace layout and dimensions are shown in \autoref{fig:ws}. The gantry carrying the \ac{IT} operates within a zone of $2.09$ m in the $Y$ direction, $0.72$ m in $X$, and $0.26$ m in $Z$. An extraction cycle begins with the gantry moving in $X$ and $Y$ to position the tool above the plant, followed by a downward movement in $Z$ to lower the drill and perform the extraction. The gantry has a maximum speed of $1\frac{m}{s}$ in the $XY$ plane, and each extraction can take up to $45$ seconds per plant. 
-
-\begin{figure}[t]
-    \myfloatalign
-    \subfloat[$X,Y$ Workspace]
-    {\label{fig:xy-ws}
-        \includegraphics[width=.45\linewidth]{gfx/ch02/xy_ws.png}} \quad
-    \subfloat[$Z$ Workspace]
-    {\label{fig:z-ws}%
-        \includegraphics[width=.45\linewidth]{gfx/ch02/z_ws.png}} \\
-    \caption{\ac{IT} Workspace Layout}\label{fig:ws}
-\end{figure}
-
-The \ac{IT} is controlled using ROS$2$ actions, which provide a structured way to handle asynchronous tasks with feedback and result reporting. For the $XY$ movement of the gantry, the \texttt{AxisPosition} action is used, allowing the specification of target coordinates ($x$, $y$) and speed, while providing feedback on the current position and confirming whether the target was reached. The \texttt{Extraction} action manages the vertical movement of the tool along the $Z$ axis, reporting the depth reached, total time taken, and success status, along with real-time feedback on the current depth. Finally, the \texttt{ExtractionCycle} action coordinates the execution of multiple extractions by accepting an array of target poses and their corresponding IDs, providing feedback on the current status and reporting the results of the extraction process for each pose. These actions enable precise and modular control of the gantry system, ensuring efficient and reliable operation. A diagram summarizing this process is shown in \autoref{fig:gantry-control}.
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.7\linewidth]{gfx/ch02/gantry_control.png}
-    \caption{ROS Interface for back gantry control}
-    \label{fig:gantry-control}
-\end{figure}
-
-
-\subsection{Localization}
-\lipsum[1]
-
-\subsection{Weed Detection}
-Paltech uses an in-house machine learning model for Rumex recognition, trained on a dataset of images captured under various lighting conditions. The model is integrated into the simulation using a ROS2 node that subscribes to the camera topic and publishes detection results. This node processes camera images, applies the trained model, and outputs the detected plants’ positions in camera coordinates along with confidence scores. This integration enables real-time detection of Rumex within the simulated environment, supporting planning and execution of extraction tasks. The model’s training dataset includes images such as the one shown in \autoref{fig:rumex-trainning}, and it is capable of generalizing to simulation images, as illustrated in \autoref{fig:rumex-sim}.
+\subsection{Metrics}
+Defining a good set of metrics is crucial to establish a solid basis for comparison between solutions and to easily identify the flaws of each method, thereby determining the best solution. To address this, we define two main categories. The first summarizes mission-level metrics such as the total idle and productive time of each tool, and the total time the robot spends moving or in a stationary state (defined by equations \ref{eq:total-mission-time} and \ref{eq:tool-usage-time}). The second category includes task-specific information, for example, task ID, status ('\textit{compleated}', '\textit{failed}', '\textit{out}'), number of stops, the tool that processed the task, and the idle and productive time of each tool at that specific stop. These metrics are displayed in a mission dashboard for easy visualization and comparison across missions using different scenarios or algorithms (see \autoref{fig:mission-metrics} for the first category and \ref{fig:task-metrics} for the second one).
 
 \begin{figure}[htb]
     \myfloatalign
-    \subfloat[Trainning dataset image]
-    {\label{fig:rumex-trainning}%
-        \includegraphics[width=.45\linewidth]{gfx/ch02/rumex.png}} \quad
-    \subfloat[Weed detection in simulation]
-    {\label{fig:rumex-sim}
-        \includegraphics[width=.45\linewidth]{gfx/ch02/rumex_sim.png}} \\
-    \caption{Example of trainning and detection}\label{fig:rumex-example}
+    \subfloat[Task Visualization]
+    {\label{fig:task-metrics}%
+        \includegraphics[width=.45\linewidth]{gfx/ch02/task_metrics.png}} \quad
+    \subfloat[Mission Category Metrics]
+    {\label{fig:mission-metrics}
+        \includegraphics[width=.45\linewidth]{gfx/ch02/mission_metrics.png}} \\
+    \caption{Mission Dashboard}\label{fig:mission-dashboard}
 \end{figure}
 
-\subsection{Nuga Controller}
-The Nuga controller is the main node responsible for orchestrating the movement of the robot, managing the \ac{IT} units, and performing task allocation based on the weed positions received from the detection node. A high-level overview of the controller's operation is shown in \autoref{fig:nuga-controller}. The timer callbacks \texttt{get\_ws\_limits()} and \texttt{get\_imp\_offsets()} are self-destructive timers used to retrieve the positions of the tool workspace limits and their offsets relative to the \texttt{base\_link}. Once this information is received, the timers are destroyed. The same applies to the callback of the \textit{/head\_camera/camera\_info} topic, which is used to obtain the camera’s central pixel position for later use.
+\paragraph{\autoref{fig:task-metrics}} Displays a 2D grid of the removed tasks' positions during the mission, along with their corresponding metadata. Hovering over a task reveals its details, and tasks can be filtered by mission.
 
-\begin{figure}[ht]
+\paragraph{\autoref{fig:mission-metrics}} Showcases a bar graph comparing different missions. Each mission includes the robot's moving and stationary time, as well as the idle and productive time of the onboard implement tools. A hover feature displays the value of each category.
+
+
+\begin{equation}
+    t_{mission} = t_{moving} + t_{stationary}
+\label{eq:total-mission-time}
+\end{equation}
+
+\begin{equation}
+    t_{tool\_operation} = t_{idle} + t_{productive}
+\label{eq:tool-usage-time}
+\end{equation}
+
+
+\subsection{Heuristics}
+Heuristic solutions are commonly employed when the solution space of an optimization problem is too large to explore exhaustively, making an exact optimal solution computationally infeasible. They are also useful in time-sensitive scenarios, such as online implementations, where sacrificing optimality for efficiency is often justified.
+
+In our work, we developed a heuristic algorithm to serve as a baseline solution, this provides a meaningful reference point to assess the performance and potential improvements offered by other algorithms. The algorithm' description is detailed in \ref{alg:heuristic}, with an illustrative example in \autoref{fig:heuristic-steps}.
+
+\begin{algorithm}
+    \caption{Heuristic}
+    \begin{algorithmic}[1]
+        \STATE Get the position of the closest weed from the current robot position.  
+        \STATE Project the tools' \ac{WS} forward (in the future), aligning the trailing edge of the last \ac{WS} with the closest weed's position plus a small clearance (e.g., 10 cm).  
+        \STATE Allocate weeds to each tool if they fall within its projected \ac{WS}.
+        \STATE Move the robot until the tools' \ac{WS} are aligned with their projections, then execute the extractions for tools with assigned weeds.  
+        \STATE Repeat the process until mission has ended.  
+    \end{algorithmic}
+    \label{alg:heuristic}
+\end{algorithm}
+
+\begin{figure}[htb]
+    \myfloatalign
+    \subfloat[S1.Closest task, S2.WS projection]
+    {\label{fig:heuristic-s1-s2}
+        \includegraphics[width=.50\linewidth]{gfx/ch02/heuristic_s1_s2.png}} \quad
+    \subfloat[S3.Task Allocation]
+    {\label{fig:heuristic-s3}%
+        \includegraphics[width=.40\linewidth]{gfx/ch02/heuristic_s3.png}} \\
+    \subfloat[S4.Moving until aligned and extraction]
+    {\label{fig:heuristic-s4}
+        \includegraphics[width=.40\linewidth]{gfx/ch02/heuristic_s4.png}} \quad
+    \subfloat[S5.Repeat]
+    {\label{fig:heuristic-s5}%
+        \includegraphics[width=.50\linewidth]{gfx/ch02/heuristic_s5.png}} \\
+    \caption{Heuristic Algorithm}\label{fig:heuristic-steps}
+\end{figure}
+
+This approach offers a simple implementation and fast computation solution, making it well-suited for online applications. However, its heuristic nature leads to suboptimal solutions, as it does not account for minimizing idle time. In \autoref{fig:heuristics-suboptimal} we exemplify the algorithm' suboptimality for a particular case, contrasting with a better solution to support our analysis.
+
+\paragraph{\autoref{fig:heuristic-suboptimal-stops}} Showcases the two stops required to remove eight weed' detections, with the first stop allocating four tasks to the back tool and the second stop allocating two tasks to the front tool.
+
+\paragraph{\autoref{fig:heuristic-suboptimal-time}} Illustrates the idle and productive time for the given solution. Blue represents the robot’s repositioning time, red indicates the idle time of the respective tool, and white the productive time. The first stop shows a significant idle time for the front tool (90 seconds, equivalent to two tasks), caused by the tool waiting for the back tool to finish before proceeding to the next stop. The second stop shows a similar situation, where idle time arises from the only feasible option at that point: removing tasks 5 and 6 with the back tool.
+
+\begin{figure}[htb]
+    \myfloatalign
+    \subfloat[Two stops required]
+    {\label{fig:heuristic-suboptimal-stops}
+        \includegraphics[width=0.6\linewidth]{gfx/ch02/heuristic_suboptimal_stops.png}}
+
+    \subfloat[Idle and productive time of each tool]
+    {\label{fig:heuristic-suboptimal-time}
+        \includegraphics[width=0.9\linewidth]{gfx/ch02/heuristic_suboptimal_time.png}}
+
+    \caption{Suboptimal solution computed using Heuristic}
+    \label{fig:heuristics-suboptimal}
+\end{figure}
+
+An alternative solution for the same scenario (this time aimed at reducing idle time) is illustrated in \autoref{fig:heuristics-optimal}. In this case, the solution requires three stops: first stop assigns tasks 1 to back tool and task 5 to the front, the second stop processes tasks 2 and 6, and finally the third stop is used to remove tasks 3, 4, 7, and 8. As shown in \autoref{fig:heuristic-optimal-time}, the balanced task allocation between tools eliminates idle time and reduces the total mission duration compared to the previous solution.
+
+This demostrates the heuristic's suboptimality, as it fails to minimize idle time and does not consider the possibility of stopping at a location that allows for a more efficient task allocation. The heuristic algorithm is limited to the closest weed detection, which may not always be the best option. In the following sections, we will explore more sofisticated algorithms that can overcome these limitations and provide better solutions. 
+
+\begin{figure}[hbt]
+    \myfloatalign
+    \subfloat[Three stops required]
+    {\label{fig:heuristic-optimal-stops}
+        \includegraphics[width=0.6\linewidth]{gfx/ch02/heuristic_optimal_stops.png}}
+
+    \subfloat[Idle and productive time of each tool]
+    {\label{fig:heuristic-optimal-time}
+        \includegraphics[width=0.9\linewidth]{gfx/ch02/heuristic_optimal_time.png}}
+
+    \caption{Optimal solution}
+    \label{fig:heuristics-optimal}
+\end{figure}
+
+\subsection{Graph Search}
+Graph Search are a type of algorithms widely used in graph theory to systematically explore or traverse a graph. They are commonly used to find the shortest path between nodes, identify connected components, or solve various optimization problems. Graph search algorithms can be broadly categorized into two main types: uninformed and informed search algorithms.
+
+Uninformed search algorithms do not have any additional information about the problem domain and explore the graph blindly. Examples include \ac{DFS} and \ac{BFS}. These algorithms are typically used for tasks like finding connected components or traversing all nodes in a graph.
+Informed search algorithms, on the other hand, use heuristics or additional information to guide the search process. They are often more efficient than uninformed algorithms for specific problems. Examples include A* search and Dijkstra's algorithm, which are commonly used for finding the shortest path in weighted graphs.
+
+In our context, we exploit the advantages of graph-based algorithms by modeling the problem as such. Nodes represent potential stop locations, where two types of actions are possible: moving to another stop (a \textit{stop node}) or performing weed removal at that location (an \textit{action node}). Edge weights are defined as follows: edges between two \textit{stop nodes} represent \textit{travel cost}, computed using the distance between stops and the robot’s velocity or a unitary value as a placeholder. Edges connecting a \textit{stop node} to an \textit{action node} represent \textit{task execution cost}, and it is calculated based on the idle time (if any) of removing the indicated weeds with the assigned tools.
+
+\begin{figure}[hbt]
     \centering
-    \includegraphics[width=0.95\linewidth]{gfx/ch02/nuga_controller.png}
-    \caption{Nuga Controller ROS Interface}
-    \label{fig:nuga-controller}
+    \includegraphics[width=0.8\linewidth]{gfx/ch02/graph_search_nodes.png}
+    \caption{Node types and cost representation}
+    \label{fig:graph-search-nodes}
 \end{figure}
 
-The \texttt{get\_next\_stop()} function is a timer callback that computes the robot's next stop when required. It uses the current detections, the robot's pose, and the selected task allocation algorithm to determine the next target position, as well as the tasks to be executed at that stop by each \ac{IT}. The execution steps followed by this method are shown in Algorithm \ref{alg:get-next-stop}.
+\paragraph{\autoref{fig:graph-search-nodes}} Illustrates the convention used to represent the graph. \texttt{S1} denotes stop number 1, while \texttt{F} or \texttt{B} indicate whether the front or back tool is assigned to remove the weed, followed by the weed ID to be processed. In this example, the task execution cost between \texttt{S1} and \texttt{S1\_F1} would be 45s, as the back tool must wait for the front tool to process 1 plant. The same logic applies to the cost between \texttt{S2} and \texttt{S2\_B1} but for the front tool.
 
-Once a stop is determined, Nuga’s movement and velocity controllers govern the robot’s behavior. The \texttt{nuga\_movement\_controller()} function switches the robot’s state between \textit{stationary} and \textit{moving} when needed, while also measuring the time spent in each state. If the robot reaches the target position, this method stops the robot and triggers the actions required to perform the extraction cycle; otherwise, it keeps the robot in the \textit{moving} state. Finally, \texttt{nuga\_velocity\_controller()} takes the robot’s state and computes the necessary velocity commands, publishing them to the \textit{/cmd\_vel} topic.
+The graph search implementation solution follows the next pipeline:
+\begin{enumerate}
+    \item Compute \textbf{candidate stops} based on the robot's current position and weed detections. Candidate stops are the locations where an important event ocurs, such as a weed entering or exiting the workspace of a tool.
+    \item \textbf{Associate} reachable weeds with candidate stops. This allows the algorithm to determine which weeds can be removed at each stop.
+    \item Create a \textbf{graph representation} of the problem using \ac{DFS} algorithm and the convention described in \autoref{fig:graph-search-nodes}. The graph is built by connecting \textit{stop nodes} and \textit{action nodes} using appropriate edge costs, taking into account the predefined associations between stops and tasks.
+    \item Get the \textbf{shortest path} in the graph from the root (first stop) to the final node (last stop) using Dijkstra's algorithm.
+    \item \textbf{Decode solution} and return the next optimal stop and task allocation as the algorithm's output.
+\end{enumerate}
 
-The callback \texttt{update\_mission\_status()} continuously checks whether the robot has reached the end-of-mission position in order to stop it and generate log information for mission metrics. On the other hand, \texttt{update\_tasks\_status()} continuously publishes the status of all weed detections to the \textit{/tasks\_status} topic. These tasks can include those assigned to the back or front tool, current detections, tasks outside the future path, and failed tasks.
+% TODO: Later I could add explanation of step 1 and 2 of the pipeline, candidate stops and association
 
-Finally, \texttt{publish\_markers()} updates RViz markers to visualize robot position and task status. \autoref{fig:rviz-visualization} shows an example of the RViz visualization in a usual mission.
+To build and explore the graph, an implementation of the \ac{DFS} algorithm is used (see Algorithm \ref{alg:dfs}). The \texttt{get\_children\_nodes} method expands the graph by generating child nodes from a given parent node. If the parent node is a \textit{stop node}, it creates child nodes for all valid combinations of reachable tasks that can be processed at that stop. Each combination forms a new child node that reflects the state after removing those tasks (\textit{action node}). Additionally a 'trivial' \textit{stop node} is addded representing the decision to move to the next stop without removing any weeds. On the other hand, if the parent node is an \textit{action node}, this method creates a single \textit{stop node} representing the next stop. Each created edge is added to the graph with a weight based on the associated \textit{task execution cost} or \textit{travel cost}. \autoref{fig:building-graph} illustrates the graph expansion process, where the algorithm grows all possible combinations of tasks at each stop and generates the corresponding child nodes. 
 
-\begin{figure}[H]
+We observe that from \texttt{S3} four possible states can be reached (three \textit{action nodes} and one \textit{stop node}), The transition \texttt{S3\_B1\_F2} achieves zero idle time by optimally balancing tasks between the front and back tools, whereas the other transitions result in higher idle times due to imbalanced assignments. It's important to note that the same stop can be reached through different paths, depending on the actions taken at previous stops. For instance, if task 1 has been removed earlier, it should no longer be considered in subsequent stops. This consideration is crucial when building the graph, as we must ensure that it is expanded only through valid and realistic transitions that reflect feasible execution scenarios.
+
+\begin{figure}[hbt]
     \centering
-    \includegraphics[width=0.95\linewidth]{gfx/ch02/rviz_black_1.png}
-    \caption{RViz Visualization}
-    \label{fig:rviz-visualization}
+    \includegraphics[width=0.7\linewidth]{gfx/ch02/building_graph.png}
+    \caption{Graph expansion process}
+    \label{fig:building-graph}
 \end{figure}
 
-\paragraph{\autoref{fig:rviz-visualization}} Displays the current position of the robot (\texttt{base\_link}), the tool workspaces, and tool positions using coordinate frames. Task categories are indicated with colored spheres: green for successful tasks, orange for tasks outside the path, red for failed tasks, and blue for robot stops. The workspace projections of the onboard tools are shown using red rectangles, while the green rectangle represents the front camera’s field of view.
+Having the complete graph, and given its configuration as a weighted directed graph, we choose Dijkstra's algorithm to find the optimal path (see Algorihtm \ref{alg:dijkstra}). This algorithm efficiently explores the graph by maintaining a priority queue of nodes to be processed, ensuring that the node with the lowest cost is always explored first. The algorithm continues until it reaches the final node, which represents the optimal solution. The path is then traced back from the final node to the root, revealing the sequence of stops and actions that lead to the optimal solution.
+
+\begin{figure}[htb]
+    \myfloatalign
+    \subfloat[Path with lowest cost]
+    {\label{fig:graph-solution}
+        \includegraphics[width=.45\linewidth]{gfx/ch02/graph_solution.png}} \quad
+    \subfloat[Task Planning Visualization]
+    {\label{fig:scenario-2-tasks}%
+        \includegraphics[width=.45\linewidth]{gfx/ch02/scenario_2_tasks.png}} \\
+    \caption{Graph Search Solution}\label{fig:graph-search-solution}
+\end{figure}
+
+An optimal solution obtained by the graph search algorithm in a scenario with two detected weeds is illustrated in \autoref{fig:graph-solution}. The highlighted branch corresponds to the optimal path found by the algorithm. For the given two weeds, the graph contained 54 nodes, and the computation time was 0.001 seconds. A visual representation of the solution is shown in \autoref{fig:scenario-2-tasks}, including the current robot pose, projected workspaces in red, candidate stops in blue, and weeds in green.
+
+% How we avoid the algorithm chossing trivial solutions where no weeds are removed?
+One remaining issue to address is preventing the algorithm from returning trivial solutions in which either no weeds are removed or not all of them are. To tackle this, each node keeps track of the tasks completed so far. If, at the second-to-last node, there are still tasks left to remove, we assign a penalty cost to the edge leading to the final node. This encourages the algorithm to prioritize removing as many weeds as possible before proceeding to the last stop.
+
+Our graph search solution performs well in terms of computation time, for a low to medium density of weeds. However, as the number of weeds increases, the graph size grows exponentially, leading to longer computation times. \autoref{fig:graphsearch-performance} showcases the graph size and computation time for different number of weeds (see plot in red). The graph size is defined as the number of nodes in the graph, while the computation time is the time required to build and find the optimal path in the graph.
+
+\begin{figure}[htb]
+    \myfloatalign
+    \subfloat[Graph size vs. number of weeds]
+    {\label{fig:graphsearch-graph-size}%
+        \includegraphics[width=.45\linewidth]{gfx/ch02/gs_graph_size_plot.png}} \quad
+    \subfloat[Processing time vs. number of weeds]
+    {\label{fig:graphsearch-processing-time}%
+        \includegraphics[width=.45\linewidth]{gfx/ch02/gs_proce_time_plot.png}} \\
+    \caption{Graph Search algorithm performance}\label{fig:graphsearch-performance}
+\end{figure}
+
+We were able to optimize and reduce the graph size by applying a pruning technique that stops the growth of certain branches when they are not promising. This is achieved by introducing the concept of \textit{expired tasks}, these are tasks that haven't been removed and can no longer be removed in future stops because the corresponding weeds have been left behind, outside the tool's workspaces. This pruning is implemented in the \texttt{get\_children\_nodes} method, where each task is checked for expiration before being added to the graph. As a result, the number of nodes is significantly reduced, improving computation time (observe green plot in \autoref{fig:graphsearch-performance}).
+
+Although the graph search algorithm is a promising approach, it still suffers from the exponential growth of the graph size as the number of weeds increases. This can lead to longer computation times and may not be suitable for real-time applications with high weed densities. In the next section, we will explore optimization-based approaches that can potentially overcome these limitations and provide more efficient solutions.
+
+\subsection{Optimization}
+As discussed at the beginning of this chapter, the main goal of \ac{TA} is to find the best allocation of resources and the optimal sequence of stops while considering the given constraints. Achieving such a solution requires mathematically formulating the scenario as an optimization task, with a clearly defined objective function, set of constraints, and decision variables that fully describe the problem. Optimization-based approaches are powerful tools that provide a systematic way to find the best feasible solution to a problem by exproring the solution space. Depending on the nature of the problem, a different optimization formulation can be used, such as linear programming, \ac{MIP}, or nonlinear programming. In our case, we will focus on \ac{MIP} as the most suitable approach for the problem.
+
+\ac{MIP} is a mathematical optimization technique that combines both integer and continuous variables in the formulation of the problem. It allows for the modeling of complex decision-making scenarios where some variables must take on discrete values (e.g., binary decisions) while others can take on continuous values. This flexibility makes \ac{MIP} particularly useful for problems that involve resource allocation, scheduling, and other combinatorial optimization tasks. \\
+
+Given a set of tasks $\mathcal{T} = \{1,2,...,T\}$ where each task $j \in \mathcal{T}$ corresponds to one weed detection from a total $T$, and a set of candidate stops $\mathcal{S} = \{1,2,...,S\}$ where each stop $i \in \mathcal{S}$ is computed using events as in Graph Search algorithm. Let $x_{i,j} \in \{0,1\} $ be a binary decision variable equal to $1$ if task $j$ is assigned to stop $i$, $0$ otherwise and ${imb}_i \in \mathbb{N}_0$ the imbalance of assigned tasks between tools at stop $i$. We know that from each stop $i$ we can only assign tasks that are visible from that stop, and a subset for those corresponds to tasks set to front or back tools, these statements could be better defined as:
+
+\begin{tabular}{ll}
+    $\mathcal{V}_i \subseteq \mathcal{T}$ & Set of tasks visible from stop $i$ \\
+    $\mathcal{F}_i \subseteq \mathcal{V}_i$ & Front tool task assigned at stop $i$ \\
+    $\mathcal{B}_i \subseteq \mathcal{V}_i$ & Back tool task assigned at stop $i$ \\
+    $\tau$ & Constant processing time per task \\
+\end{tabular}
+
+We know that each task must be assigned to exactly one stop.
+
+\begin{equation}
+    \sum_{i=1}^{S} x_{i,j} = 1 \quad \forall j \in \mathcal{T}
+\end{equation}
+
+While visible tasks can only be assigned its corresponding stops.
+
+\begin{equation}
+    x_{i,j} = 0 \quad \text{if} \quad j \notin \mathcal{V}_i
+\end{equation}
+
+The imbalance per stop is the absolute time difference between front and back tools.
+
+\begin{equation}
+    f_i = \sum_{j \in \mathcal{F}_i} x_{i,j} \quad \text{and} \quad b_i = \sum_{j \in \mathcal{B}_i} x_{i,j}
+\end{equation}
+
+We want the imbalance ${imb}_i$ to reflect the time difference between front and back processing times at each stop. Therefore, we define the imbalance as the maximum of the two possible differences.
+
+\begin{equation}
+    \left| \tau (f_i - b_i) \right| = \max \left( f_i - b_i, b_i - f_i \right)
+\end{equation}
+
+Thus
+
+\begin{equation}
+    {imb}_i \geq \tau \left(f_i - b_i\right) \quad \text{and} \quad {imb}_i \geq \tau \left(b_i - f_i\right)
+\end{equation}
+
+Or equivalently
+
+\begin{equation}
+    {imb}_i \geq \left| \tau (f_i - b_i) \right| \quad \forall i \in \mathcal{S}
+\end{equation}
+
+The objective function is to minimize the total idle time, expressed as follows
+
+\begin{equation}
+    \min \sum_{i=1}^{S} {imb}_i
+\end{equation}
+
+Given the constraints and objective function, we can formulate the optimization problem as follows:
+
+\begin{equation}
+    \begin{aligned}
+        \text{minimize} & \quad \sum_{i=1}^{S} {imb}_i \\
+        \text{subject to} & \quad \sum_{i=1}^{S} x_{i,j} = 1 \quad \forall j \in \mathcal{T} \\
+                          & \quad x_{i,j} = 0 \quad \text{if} \quad j \notin \mathcal{V}_i
+    \end{aligned}
+\end{equation}
+
+An advantage of an optimization-based approach is that once the problem is formulated we can use existing optimization libraries to obtain the solution. In our case, we used the \texttt{Google OR-Tools}\footnote{OR-Tools is an open source software suite for optimization, tuned for tackling the world's toughest problems in vehicle routing, flows, integer, linear, and constraint programming. \url{https://developers.google.com/optimization}} library to solve our combinatorial problem.
+
+The pipeline for the optimization-based approach is as follows:
+\begin{enumerate}
+    \item Compute \textbf{candidate stops} based on the robot's current position and weed detections.
+    \item \textbf{Associate} reachable weeds with candidate stops.
+    \item Build the \textbf{optimization model} using decision variables, constraints, and objective function.
+    \item \textbf{Call solver} to get solution.
+    \item \textbf{Decode solution} and return the next optimal stop and task allocation as the algorithm's output.
+\end{enumerate}
+
+This method does not suffer from high processing times as weed density increases. The algorithm consistently returns a solution in less than 0.1 seconds across a range of weed densities, from low to extremely high (tested up to $6.25$ weeds/m²), making it a strong candidate for real-time applications. The optimization model effectively balances tasks between tools while minimizing idle time. \autoref{fig:mip-solution} illustrates an example of the solution generated by the optimization algorithm in a scenario with twenty weeds.
+
+\begin{figure}[htb]
+    \myfloatalign
+    \subfloat[Optimization Output]
+    {\label{fig:mip-algorithm-output}
+        \includegraphics[width=.40\linewidth]{gfx/ch02/mip_solution.png}} \quad
+    \subfloat[Task Planning Visualization]
+    {\label{fig:mip-scenario-10-tasks}%
+        \includegraphics[width=.55\linewidth]{gfx/ch02/mip_scenario_20tasks.png}} \\
+    \caption{Mixed-Integer Programming Solution}\label{fig:mip-solution}
+\end{figure}
+
+\subsection{Market-based}
+Market-based approaches are a class of algorithms that leverage the principles of supply and demand to solve task allocation problems. In our context, we consider the set of visible tasks from each candidate stop ($\mathcal{V}_i \subseteq \mathcal{T}$). Given these tasks, the algorithm forms all possible combinations of allocations and generates a bid for each one. The allocation is then determined based on the bids received and selecting the best one. A '\textit{better bid}' is defined as the combination that maximizes the number of removed weeds while minimizing the imbalance between tools (i.e., idle time). The algorithm is designed to be fast and efficient, making it suitable for real-time applications. Nevertheless, since the approach always selects the best next stop, it falls into the category of greedy algorithms due to its shortsighted nature. In some cases, it is necessary to sacrifice productivity at the next stop to benefit the overall solution, as illustrated in \autoref{fig:heuristics-suboptimal} and \autoref{fig:heuristics-optimal}. The main advantage of this approach is its ability to adapt to dynamic environments where tasks change over time.
+
+The next stop computation follows a similar pipeline to previous algorithms, with the main differences being the use of a bidding process to determine the best solution and the computation of candidate stops. Algorithm~\ref{alg:run-algorithm} outlines the steps involved during the algorithm.
+
+\begin{algorithm}
+    \caption{Run Algorithm (Market-Based)}
+    \label{alg:run-algorithm}
+    \begin{algorithmic}[1]
+    \REQUIRE Current tasks and robot pose
+    \ENSURE Best stop and task assignment with shortest idle time
+    
+    \STATE $\texttt{candidate\_stops} \gets \texttt{get\_candidate\_stops()}$
+    \STATE \texttt{associate\_tasks\_with\_stops(candidate\_stops)}
+    \IF{\texttt{log\_print}}
+        \STATE \texttt{log("Collecting Biddings...")}
+    \ENDIF
+    \STATE \texttt{start\_timer()}
+    \STATE $(\texttt{stop}, \texttt{tasks}, \texttt{idle\_time}) \gets \texttt{get\_best\_bid()}$
+    \STATE $\texttt{sw\_time} \gets \texttt{stop\_timer()}$
+    \IF{\texttt{log\_print}}
+        \STATE \texttt{log("Processing time: "} $\texttt{sw\_time}$\texttt{"s")}
+        \STATE \texttt{log("Shortest time found: "} $\texttt{idle\_time}$\texttt{"s")}
+    \ENDIF
+    \STATE \textbf{return} $(\texttt{stop}, \texttt{tasks}, \texttt{idle\_time})$
+    \end{algorithmic}
+\end{algorithm}
+    
+The candidate stops are computed by considering only the closest weed detection and the events this task generate within the back tool workspace. These events include:
+
+\begin{enumerate}
+    \item Entering the workspace.
+    \item The stop position where the weed is about to exit (rather than when it fully exits).
+\end{enumerate}
+
+Using these two candidate poses, we generate evenly distributed positions to create additional candidates between these two events. Afterwards, we perform task association per stop as usual and call \texttt{get\_best\_bid} to start the bidding process and obtain the solution. The algorithm iterates through all possible combinations of tasks at each stop, calculating the idle time for each combination. The combination with the lowest idle time and more number of weeds is selected as the best bid. This process is repeated for all candidate stops, and the best overall stop and task allocation are returned (observe Algorithm \ref{alg:get-best-bid}).
+
+\begin{algorithm}[H]
+    \caption{Get Best Bid}
+    \label{alg:get-best-bid}
+    \begin{algorithmic}[1]
+    \REQUIRE Candidate stops with associated tasks
+    \ENSURE Best stop and task assignment with minimum idle time
+    
+    \STATE $\text{bid} \gets \text{Bid}(\emptyset, \infty)$
+    \STATE $\text{stops} \gets [\ ]$
+    \STATE $\text{best\_stop} \gets \text{None}$
+    \STATE $\text{best\_bid} \gets \text{None}$
+    
+    \FOR{$i, \text{stop} \in \text{enumerate(candidate\_stops)}$}
+        \STATE $\text{tasks\_per\_stop} \gets [\ ]$
+        \FOR{$\text{task} \in \text{stop["tasks"]}$}
+            \STATE $\text{tasks\_per\_stop.append(task)}$
+        \ENDFOR
+    
+        \STATE $\text{combinations} \gets \text{get\_all\_combinations(tasks\_per\_stop)}$
+        \STATE $\text{idle} \gets \text{get\_idle\_per\_combination(combinations)}$
+        \STATE $\text{bid} \gets \text{get\_bid(zip(combinations, idle))}$
+        \IF{\text{update\_bid\_if\_better(bid)}}
+            \STATE $\text{best\_stop} \gets i$
+            \STATE $\text{best\_bid} \gets \text{bid}$
+        \ENDIF
+    \ENDFOR
+    
+    \RETURN $\text{stops[best\_stop]}, \text{best\_bid.tasks}, \text{best\_bid.idle}$
+    \end{algorithmic}
+\end{algorithm}
+    
+
+An example of the solution produced by this algorithm is illustrated in \autoref{fig:mkt-solution}. We can observe that only four candidate stops are generated for four tasks. Notice the contrast with the graph search in \autoref{fig:scenario-2-tasks} and the optimization approach in \autoref{fig:mip-scenario-10-tasks}.
+
+\begin{figure}[htb]
+    \myfloatalign
+    \subfloat[Market-based Output]
+    {\label{fig:mkt-algorithm-output}
+        \includegraphics[width=.45\linewidth]{gfx/ch02/mkt_solution.png}} \quad
+    \subfloat[Task Planning Visualization]
+    {\label{fig:mkt-scenario-4-tasks}%
+        \includegraphics[width=.50\linewidth]{gfx/ch02/mrk_scenario_4tasks.png}} \\
+    \caption{Market-based Solution}\label{fig:mkt-solution}
+\end{figure}
 
 %*****************************************
 %*****************************************

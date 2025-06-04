@@ -3,22 +3,7 @@
 %*******************************************************
 % If problems with the headers: get headings in appendix etc. right
 %\markboth{\spacedlowsmallcaps{Appendix}}{\spacedlowsmallcaps{Appendix}}
-\chapter{Appendix Test}\label{sec:appendix}
-Lorem ipsum at nusquam appellantur his, ut eos erant homero
-concludaturque. Albucius appellantur deterruisset id eam, vivendum
-partiendo dissentiet ei ius. Vis melius facilisis ea, sea id convenire
-referrentur, takimata adolescens ex duo. Ei harum argumentum per. Eam
-vidit exerci appetere ad, ut vel zzril intellegam interpretaris.
-\graffito{More dummy text.}
-
-%Errem omnium ea per, pro congue populo ornatus cu, ex qui dicant
-%nemore melius. No pri diam iriure euismod. Graecis eleifend
-%appellantur quo id. Id corpora inimicus nam, facer nonummy ne pro,
-%kasd repudiandae ei mei. Mea menandri mediocrem dissentiet cu, ex
-%nominati imperdiet nec, sea odio duis vocent ei. Tempor everti
-%appareat cu ius, ridens audiam an qui, aliquid admodum conceptam ne
-%qui. Vis ea melius nostrum, mel alienum euripidis eu.
-
+\chapter{Appendix}\label{sec:appendix}
 \section{Configuration Files}
 YAML files are the standard method for setting up configuration variables in the Nuga project. A collection of configuration examples is provided in this appendix.
 
@@ -32,7 +17,6 @@ YAML files are the standard method for setting up configuration variables in the
         spatial_distribution: clustered
         std_dev: [0.5, 0.5]
         outside_workspace: false
-    
       2:
         direction: x
         weed_density: 1.2   # weeds/m2
@@ -55,7 +39,6 @@ YAML files are the standard method for setting up configuration variables in the
       
       forward_position_controller_back:
         type: forward_command_controller/ForwardCommandController
-  
   forward_position_controller_front:
     ros__parameters:
       joints:
@@ -63,7 +46,6 @@ YAML files are the standard method for setting up configuration variables in the
         - front_y_axis_joint
         - front_implement_tool_joint
       interface_name: position
-  
   forward_position_controller_back:
     ros__parameters:
       joints:
@@ -75,8 +57,8 @@ YAML files are the standard method for setting up configuration variables in the
 
 \clearpage
 \section{Algorithms}
-\
-\begin{algorithm}
+
+\begin{algorithm}[H]
 \caption{Depth-First Search}
 \label{alg:dfs}
 \begin{algorithmic}[1]
