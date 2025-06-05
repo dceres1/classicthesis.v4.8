@@ -70,7 +70,7 @@ There are several ways to accomplish multi-tool allocation, including heuristic,
         & Contract Net Protocol \\
         \bottomrule
     \end{tabularx}
-    \caption[Task allocation approaches]{Comparative overview of cluster-based and market-based approaches to multi-agent \ac{TA}. \cite{10.1145/3700591}}
+    \caption[Task allocation approaches]{Comparative overview of cluster-based and market-based approaches to multi-agent task allocation. \cite{10.1145/3700591}}
     \label{tab:task-allocation-approaches-1}
 \end{table}
 
@@ -108,7 +108,7 @@ There are several ways to accomplish multi-tool allocation, including heuristic,
         & Fuzzy Optimization \\
         \bottomrule
     \end{tabularx}
-    \caption[Task allocation approaches]{Comparative overview of learning-based and optimization-based approaches to multi-agent \ac{TA}. \cite{10.1145/3700591}}
+    \caption[Task allocation approaches]{Comparative overview of learning-based and optimization-based approaches to multi-agent task allocation. \cite{10.1145/3700591}}
     \label{tab:task-allocation-approaches-2}
 \end{table}
 
@@ -150,12 +150,16 @@ Recent approaches to task allocation incorporate deep learning techniques such a
     \rotatebox[origin=c]{90}{Best case}   & Logical tasks                         & Well-defined, static problems                               & Dynamic environments with varying tasks                  & Complex and uncertain environments            \\
     \rotatebox[origin=c]{90}{Future work} & Dynamic clustering, online adaptation & Hybrid models, real-time optimization                       & Adaptive market mechanisms, incentive models             & Transfer learning, meta-learning              
     \end{tblr}
-    \caption{A Comparison of different approaches to \ac{TA}, Source \cite{10.1145/3700591}}
+    \caption{A Comparison of different Task Allocation approaches, Source \cite{10.1145/3700591}}
     \label{tab:approaches-comparison}
 \end{table}
 
 \section{Proposed Solution}
 % 5) What are the proposed solution approaches?
-As Table \ref{tab:approaches-comparison} illustrates, algorithm selection must be carefully considered based on the application's nature to achieve optimal performance. In a grass field clearing application, the environment is highly dynamic, especially since weed detections occur while the system is in motion. Therefore, market-based approaches are well-suited to ensuring the system adapts effectively to such conditions. However, since weeds often spread in clustered areas, a cluster-based approach could help reduce the algorithm's computational load and improve real-time responsiveness.
+As Table \ref{tab:approaches-comparison} illustrates, algorithm selection must be carefully considered based on the application's nature to achieve optimal performance. In a grass field clearing application, the environment is highly dynamic, especially since weed detections occur while the system is in motion. Therefore, market-based approaches are well-suited to ensuring the system adapts effectively to such conditions. However, this solution might not be optimal.
 
-A hybrid algorithm is proposed to tackle the dynamics of the environment and leverage the benefits of both market-based and cluster-based approaches. By combining real-time adaptability with efficient task grouping, the system can dynamically allocate tasks while minimizing computational overhead. This approach ensures that weed removal remains efficient even as new detections occur, ultimately improving performance in large-scale and rapidly changing field conditions.
+Optimization-based solutions, on the other hand, are known for providing optimal results, but they are typically more suited for static problems. In our case, although the environment is dynamic, this approach is still worth exploring. Since tasks are continuously added and removed from the allocation problem, the computation time at this task density may not be a significant issue, making real-time optimization feasible.
+
+A graph search approach is also proposed, which becomes particularly interesting if the problem can be translated into a graph representation. Using well-known algorithms such as \ac{DFS} or Dijkstra's can help find the lowest-cost solution and achieve effective resource allocation, reducing both idle time and overall mission duration.
+
+Lastly, clustering and learning-based approaches will be discarded. Clustering due to the challenges of dynamic clustering and the need for online adaptation. Although it offers the advantage of simplifying task allocation, its benefits diminish in low to medium density scenarios. Learning-based approaches are excluded because of the required training phase and the difficulty of generalizing across environments with varying task densities.
