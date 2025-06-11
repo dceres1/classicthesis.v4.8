@@ -17,10 +17,10 @@
 % does not support utf8 use another editor!
 % ****************************************************************************************************
 \PassOptionsToPackage{utf8}{inputenc}
-  \usepackage{inputenc}
+\usepackage{inputenc}
 
 \PassOptionsToPackage{T1}{fontenc} % T2A for cyrillics
-  \usepackage{fontenc}
+\usepackage{fontenc}
 
 
 % ****************************************************************************************************
@@ -78,7 +78,7 @@
 \PassOptionsToPackage{ngerman,american}{babel} % change this to your language(s), main language last
 % Spanish languages need extra options in order to work with this template
 %\PassOptionsToPackage{spanish,es-lcroman}{babel}
-    \usepackage{babel}
+\usepackage{babel}
 
 \usepackage{csquotes}
 \PassOptionsToPackage{%
@@ -88,15 +88,15 @@
   style=numeric-comp,%
   %style=authoryear-comp, % Author 1999, 2010
   %bibstyle=authoryear,dashed=false, % dashed: substitute rep. author with ---
-  sorting=nyt, % name, year, title
+  sorting=none, % name, year, title
   maxbibnames=10, % default: 3, et al.
   %backref=true,%
   natbib=true % natbib compatibility mode (\citep and \citet still work)
 }{biblatex}
-    \usepackage{biblatex}
+\usepackage{biblatex}
 
 \PassOptionsToPackage{fleqn}{amsmath}       % math environments and more by the AMS
-  \usepackage{amsmath}
+\usepackage{amsmath}
 
 % ********************************************************************
 % General useful packages
@@ -105,13 +105,13 @@
 \usepackage{scrhack} % fix warnings when using KOMA with listings package
 \usepackage{xspace} % to get the spacing after macros right
 \PassOptionsToPackage{printonlyused,smaller}{acronym}
-  \usepackage{acronym} % nice macros for handling all acronyms in the thesis
-  %\renewcommand{\bflabel}[1]{{#1}\hfill} % fix the list of acronyms --> no longer working
-  %\renewcommand*{\acsfont}[1]{\textsc{#1}}
-  %\renewcommand*{\aclabelfont}[1]{\acsfont{#1}}
-  %\def\bflabel#1{{#1\hfill}}
-  \def\bflabel#1{{\acsfont{#1}\hfill}}
-  \def\aclabelfont#1{\acsfont{#1}}
+\usepackage{acronym} % nice macros for handling all acronyms in the thesis
+%\renewcommand{\bflabel}[1]{{#1}\hfill} % fix the list of acronyms --> no longer working
+%\renewcommand*{\acsfont}[1]{\textsc{#1}}
+%\renewcommand*{\aclabelfont}[1]{\acsfont{#1}}
+%\def\bflabel#1{{#1\hfill}}
+\def\bflabel#1{{\acsfont{#1}\hfill}}
+\def\aclabelfont#1{\acsfont{#1}}
 % ****************************************************************************************************
 %\usepackage{pgfplots} % External TikZ/PGF support (thanks to Andreas Nautsch)
 %\usetikzlibrary{external}
@@ -123,7 +123,7 @@
 % 4. Setup floats: tables, (sub)figures, and captions
 % ****************************************************************************************************
 \usepackage{tabularx} % better tables
-  \setlength{\extrarowheight}{3pt} % increase table row height
+\setlength{\extrarowheight}{3pt} % increase table row height
 \newcommand{\tableheadline}[1]{\multicolumn{1}{l}{\spacedlowsmallcaps{#1}}}
 \newcommand{\myfloatalign}{\centering} % to be used with each float for alignment
 \usepackage{subfig}
@@ -218,32 +218,32 @@
 % language you use, e.g., american, ngerman
 % (as chosen when loading babel/AtBeginDocument)
 % ********************************************************************
- \makeatletter
- \@ifpackageloaded{babel}%
-   {%
-     \addto\extrasamerican{%
-       \renewcommand*{\figureautorefname}{Figure}%
-       \renewcommand*{\tableautorefname}{Table}%
-       \renewcommand*{\partautorefname}{Part}%
-       \renewcommand*{\chapterautorefname}{Chapter}%
-       \renewcommand*{\sectionautorefname}{Section}%
-       \renewcommand*{\subsectionautorefname}{Section}%
-       \renewcommand*{\subsubsectionautorefname}{Section}%
-     }%
-     \addto\extrasngerman{%
-       \renewcommand*{\paragraphautorefname}{Absatz}%
-       \renewcommand*{\subparagraphautorefname}{Unterabsatz}%
-       \renewcommand*{\footnoteautorefname}{Fu\"snote}%
-       \renewcommand*{\FancyVerbLineautorefname}{Zeile}%
-       \renewcommand*{\theoremautorefname}{Theorem}%
-       \renewcommand*{\appendixautorefname}{Anhang}%
-       \renewcommand*{\equationautorefname}{Gleichung}%
-       \renewcommand*{\itemautorefname}{Punkt}%
-     }%
-       % Fix to getting autorefs for subfigures right (thanks to Belinda Vogt for changing the definition)
-       \providecommand{\subfigureautorefname}{\figureautorefname}%
-     }{\relax}
- \makeatother
+\makeatletter
+\@ifpackageloaded{babel}%
+{%
+  \addto\extrasamerican{%
+    \renewcommand*{\figureautorefname}{Figure}%
+    \renewcommand*{\tableautorefname}{Table}%
+    \renewcommand*{\partautorefname}{Part}%
+    \renewcommand*{\chapterautorefname}{Chapter}%
+    \renewcommand*{\sectionautorefname}{Section}%
+    \renewcommand*{\subsectionautorefname}{Section}%
+    \renewcommand*{\subsubsectionautorefname}{Section}%
+  }%
+  \addto\extrasngerman{%
+    \renewcommand*{\paragraphautorefname}{Absatz}%
+    \renewcommand*{\subparagraphautorefname}{Unterabsatz}%
+    \renewcommand*{\footnoteautorefname}{Fu\"snote}%
+    \renewcommand*{\FancyVerbLineautorefname}{Zeile}%
+    \renewcommand*{\theoremautorefname}{Theorem}%
+    \renewcommand*{\appendixautorefname}{Anhang}%
+    \renewcommand*{\equationautorefname}{Gleichung}%
+    \renewcommand*{\itemautorefname}{Punkt}%
+  }%
+  % Fix to getting autorefs for subfigures right (thanks to Belinda Vogt for changing the definition)
+  \providecommand{\subfigureautorefname}{\figureautorefname}%
+}{\relax}
+\makeatother
 
 % (Better) alternative to \autoref is \cref via the cleveref package
 %\usepackage{cleveref}
