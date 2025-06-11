@@ -1,7 +1,7 @@
 %************************************************
 \chapter{Results}\label{ch:Results}
 %************************************************
-This chapter presents the simulation results and a comparison between all proposed methods in different scenarios variating from low to high weed density infestation as well as . The goal of this chapter is to come up with the best solution for the task allocation problem and measure the performance improvement over the baseline method.
+This chapter presents a detailed explanation of how the simulation was built and a performance comparison of all proposed \ac{TA} methods across different scenarios ranging from low to high weed density. The goal is to identify the most effective solution to the \ac{TA} problem and quantify the performance improvements over the baseline method. Additionally, this chapter clarifies key implementation details and evaluation metrics.
 
 \section{The Robot}\label{sec:nuga}
 Nuga is Paltech's solution for speeding up the weed removal process. Nuga is a mobile platform equipped with two weed control mechanisms, also called \ac{IT}, one main camera at the front for plant detection, two internal cameras for fine adjustment during tools' placement, an IMU, and two GNSS antennas for GPS localization. Each \ac{IT} is mounted on a structure with three \ac{DOF} using prismatic joints, allowing movement in X, Y, and Z directions.
@@ -103,7 +103,16 @@ The \ac{IT} is controlled using ROS$2$ actions, which provide a structured way t
 
 
 \subsection{Localization}
-\lipsum[1]
+Accurate localization is essential for mobile robot navigation. In most robotic systems, a combination of sensors such as wheel encoders, IMU's, and GPS (for outdoor applications) are used to estimate the robot's pose in the environment. In simulation, these sensors can be approximated to real-world conditions and provide a testbed for validating higher-level behaviours (e.g., path planning, task allocation, etc.). In this work, the \texttt{robot\_localization}\footnote{\texttt{robot\_localization} is a collection of state estimation nodes, each of which is an implementation of a nonlinear state estimator for robots moving in 3D space. It contains two state estimation nodes, \texttt{ekf\_localization\_node} and \texttt{ukf\_localization\_node}. In addition, it provides \texttt{navsat\_transform\_node}, which aids in the integration of GPS data. \url{https://docs.ros.org/en/melodic/api/robot_localization/html/index.html}} package was used to estimate the robot's pose by fusing sensor data. Typically, this would involve:
+
+\begin{itemize}
+    \item An \textbf{Extended Kalman Filter (EKF)} fusing high-frequency wheel odometry and IMU data with low-frequency GPS.
+    \item A \texttt{navsat\_transform\_node} to convert GPS data into the robot's odom frame.
+\end{itemize}
+
+However, as wheel odometry was not implemented in the simulation due to plugin limitations, the navigation was done merely using fusion of GPS and IMU, this allowed the EKF to still function and produce a pose estimate. While this approach deviates from standar practice, it was deemed acceptable for this thesis for several reasons: Localization is not the primary contribution of this work, the fused GPS and IMU data provided sufficient accuracy and stability for validating the \ac{TA} investigation, and the use of \texttt{robot\_localization} still maintains a realistic pipeline for future extension of real-world deployment.
+
+This setup does not model short-term drift correction that would normally be provided by wheel odometry, and the reliance on GPS alone may introduce small jumps or inaccuracies in pose estimation. These limitations are acknowledged but do not affect the core objectives or validity of the experiments conducted in this work.
 
 \subsection{Weed Detection}
 Paltech uses an in-house machine learning model for Rumex recognition, trained on a dataset of images captured under various lighting conditions. The model is integrated into the simulation using a ROS2 node that subscribes to the camera topic and publishes detection results. This node processes camera images, applies the trained model, and outputs the detected plants’ positions in camera coordinates along with confidence scores. This integration enables real-time detection of Rumex within the simulated environment, supporting planning and execution of extraction tasks. The model’s training dataset includes images such as the one shown in \autoref{fig:rumex-trainning}, and it is capable of generalizing to simulation images, as illustrated in \autoref{fig:rumex-sim}.

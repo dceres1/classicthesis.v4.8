@@ -164,7 +164,7 @@ We observe that from \texttt{S3} four possible states can be reached (three \tex
     \label{fig:building-graph}
 \end{figure}
 
-Having the complete graph, and given its configuration as a weighted directed graph, we choose Dijkstra's algorithm to find the optimal path (see Algorihtm \ref{alg:dijkstra}). This algorithm efficiently explores the graph by maintaining a priority queue of nodes to be processed, ensuring that the node with the lowest cost is always explored first. The algorithm continues until it reaches the final node, which represents the optimal solution. The path is then traced back from the final node to the root, revealing the sequence of stops and actions that lead to the optimal solution.
+Having the complete graph, and given its configuration as a weighted directed graph, we choose Dijkstra's algorithm to find the optimal path. This algorithm efficiently explores the graph by maintaining a priority queue of nodes to be processed, ensuring that the node with the lowest cost is always explored first. The algorithm continues until it reaches the final node, which represents the optimal solution. The path is then traced back from the final node to the root, revealing the sequence of stops and actions that lead to the optimal solution.
 
 \begin{figure}[htb]
     \myfloatalign
