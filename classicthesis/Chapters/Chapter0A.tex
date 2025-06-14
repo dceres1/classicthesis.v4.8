@@ -5,7 +5,6 @@
 %\markboth{\spacedlowsmallcaps{Appendix}}{\spacedlowsmallcaps{Appendix}}
 \chapter{Appendix}\label{sec:appendix}
 \section{Configuration Files}
-YAML files are the standard method for setting up configuration variables in the Nuga project. A collection of configuration examples is provided in this appendix.
 
 \begin{lstlisting}[language=yaml, frame=tb, caption={Weed Infestation World config example}, label={lst:world-yaml}, float=h]
     seed: 2
@@ -49,77 +48,77 @@ YAML files are the standard method for setting up configuration variables in the
 \section{Algorithms}
 
 \begin{algorithm}[H]
-    \caption{Depth-First Search}
-    \label{alg:dfs}
-    \begin{algorithmic}[1]
-        \REQUIRE $root\_node$, $last\_node$
-        \ENSURE Explored Graph
+  \caption{Depth-First Search}
+  \label{alg:dfs}
+  \begin{algorithmic}[1]
+    \REQUIRE $root\_node$, $last\_node$
+    \ENSURE Explored Graph
 
-        \STATE $\text{visited} \gets \{\text{last\_node}\}$ \COMMENT{Initialize with last node}
-        \STATE $\text{stack} \gets [\text{root\_node}]$ \COMMENT{Start with root node}
-        \STATE $i \gets 0$ \COMMENT{Iteration counter}
+    \STATE $\text{visited} \gets \{\text{last\_node}\}$ \COMMENT{Initialize with last node}
+    \STATE $\text{stack} \gets [\text{root\_node}]$ \COMMENT{Start with root node}
+    \STATE $i \gets 0$ \COMMENT{Iteration counter}
 
-        \WHILE{stack is not empty}
-        \STATE $i \gets i + 1$
-        \STATE $\text{node} \gets \text{stack.pop}()$
-        \IF{node $\notin$ visited}
-        \STATE $\text{visited.add(node)}$
-        \STATE $\text{children} \gets \text{get\_children\_nodes(node)}$
+    \WHILE{stack is not empty}
+    \STATE $i \gets i + 1$
+    \STATE $\text{node} \gets \text{stack.pop}()$
+    \IF{node $\notin$ visited}
+    \STATE $\text{visited.add(node)}$
+    \STATE $\text{children} \gets \text{get\_children\_nodes(node)}$
 
-        \IF{children $\neq$ None}
-        \STATE $\text{stack.extend(children)}$ \COMMENT{Add children to stack}
-        \ENDIF
-        \ENDIF
-        \IF{$i == 5000$}
-        \STATE \textbf{break} \COMMENT{Early termination}
-        \ENDIF
-        \ENDWHILE
-    \end{algorithmic}
+    \IF{children $\neq$ None}
+    \STATE $\text{stack.extend(children)}$ \COMMENT{Add children to stack}
+    \ENDIF
+    \ENDIF
+    \IF{$i == 5000$}
+    \STATE \textbf{break} \COMMENT{Early termination}
+    \ENDIF
+    \ENDWHILE
+  \end{algorithmic}
 \end{algorithm}
 
 \begin{algorithm}[H]
-    \caption{Get Next Stop}
-    \label{alg:get-next-stop}
-    \begin{algorithmic}[1]
-        \REQUIRE Detections, Robot pose
-        \ENSURE Next stop pose and assigned tasks
+  \caption{Get Next Stop}
+  \label{alg:get-next-stop}
+  \begin{algorithmic}[1]
+    \REQUIRE Detections, Robot pose
+    \ENSURE Next stop pose and assigned tasks
 
-        \IF{$\texttt{stop\_pose} \neq \texttt{None}$}
-        \STATE \textbf{return}
-        \ENDIF
+    \IF{$\texttt{stop\_pose} \neq \texttt{None}$}
+    \STATE \textbf{return}
+    \ENDIF
 
-        \IF{\texttt{detections} is empty}
-        \STATE $\texttt{nuga\_state} \gets \texttt{"moving"}$
-        \STATE \textbf{return}
-        \ENDIF
+    \IF{\texttt{detections} is empty}
+    \STATE $\texttt{nuga\_state} \gets \texttt{"moving"}$
+    \STATE \textbf{return}
+    \ENDIF
 
-        \STATE $(\texttt{tasks\_in}, \texttt{tasks\_out}) \gets \texttt{get\_tasks\_in\_future\_path()}$
-        \STATE $\texttt{now} \gets \texttt{current time}$
+    \STATE $(\texttt{tasks\_in}, \texttt{tasks\_out}) \gets \texttt{get\_tasks\_in\_future\_path()}$
+    \STATE $\texttt{now} \gets \texttt{current time}$
 
-        \IF{\texttt{tasks\_out} is not empty}
-        \FORALL{$(\texttt{idx}, \texttt{pose}) \in \texttt{tasks\_out}$}
-        \STATE $\texttt{tasks\_out\_ws[idx]} \gets \texttt{pose}$
-        \STATE \texttt{add\_marker("map", now, "out", idx, pose, "orange")}
-        \ENDFOR
-        \ENDIF
+    \IF{\texttt{tasks\_out} is not empty}
+    \FORALL{$(\texttt{idx}, \texttt{pose}) \in \texttt{tasks\_out}$}
+    \STATE $\texttt{tasks\_out\_ws[idx]} \gets \texttt{pose}$
+    \STATE \texttt{add\_marker("map", now, "out", idx, pose, "orange")}
+    \ENDFOR
+    \ENDIF
 
-        \IF{\texttt{tasks\_in} is empty}
-        \STATE $\texttt{nuga\_state} \gets \texttt{"moving"}$
-        \STATE \textbf{return}
-        \ENDIF
+    \IF{\texttt{tasks\_in} is empty}
+    \STATE $\texttt{nuga\_state} \gets \texttt{"moving"}$
+    \STATE \textbf{return}
+    \ENDIF
 
-        \STATE \texttt{algorithm.set\_robot\_pose(nuga\_pose)}
-        \STATE \texttt{algorithm.set\_tasks(tasks\_in)}
-        \STATE $(\texttt{stop\_pose}, \texttt{stop\_tasks}) \gets \texttt{algorithm.compute\_next\_stop()}$
-        \STATE \texttt{add\_marker("map", now, "goal", stops\_counter + 1, stop\_pose, "blue")}
+    \STATE \texttt{algorithm.set\_robot\_pose(nuga\_pose)}
+    \STATE \texttt{algorithm.set\_tasks(tasks\_in)}
+    \STATE $(\texttt{stop\_pose}, \texttt{stop\_tasks}) \gets \texttt{algorithm.compute\_next\_stop()}$
+    \STATE \texttt{add\_marker("map", now, "goal", stops\_counter + 1, stop\_pose, "blue")}
 
-        \STATE \texttt{clear\_polygons()}
-        \STATE $id \gets 0$
-        \FORALL{$(\texttt{name}, \texttt{imp}) \in \texttt{implements}$}
-        \STATE \texttt{add\_polygon("map", now, name + "\_ws", id, imp.future\_ws\_pose)}
-        \STATE $id \gets id + 1$
-        \ENDFOR
-    \end{algorithmic}
+    \STATE \texttt{clear\_polygons()}
+    \STATE $id \gets 0$
+    \FORALL{$(\texttt{name}, \texttt{imp}) \in \texttt{implements}$}
+    \STATE \texttt{add\_polygon("map", now, name + "\_ws", id, imp.future\_ws\_pose)}
+    \STATE $id \gets id + 1$
+    \ENDFOR
+  \end{algorithmic}
 \end{algorithm}
 
 %Ei solet nemore consectetuer nam. Ad eam porro impetus, te choro omnes
